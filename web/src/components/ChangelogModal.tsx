@@ -6,7 +6,7 @@ import {
   Button,
   Spinner,
 } from "@heroui/react";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from "rehype-highlight";
@@ -27,13 +27,7 @@ export function ChangelogModal({ isOpen, onOpenChange, version }: ChangelogModal
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  useEffect(() => {
-    if (isOpen) {
-      loadChangelog();
-    }
-  }, [isOpen, version]);
-  
-  const loadChangelog = async () => {
+  const loadChangelog = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -53,7 +47,13 @@ export function ChangelogModal({ isOpen, onOpenChange, version }: ChangelogModal
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [version, t]);
+  
+  useEffect(() => {
+    if (isOpen) {
+      loadChangelog();
+    }
+  }, [isOpen, loadChangelog]);
   
   return (
     <AccessibleModal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" scrollBehavior="inside">

@@ -138,6 +138,7 @@ export function Layout({ children }: LayoutProps) {
               className="text-sm font-medium"
               onPress={() => setIsChangelogOpen(true)}
             >
+              {/* eslint-disable-next-line no-undef */}
               v{__APP_VERSION__}
             </Button>
           </NavbarItem>
@@ -339,6 +340,7 @@ export function Layout({ children }: LayoutProps) {
       <ChangelogModal
         isOpen={isChangelogOpen}
         onOpenChange={() => setIsChangelogOpen(false)}
+        // eslint-disable-next-line no-undef
         version={__APP_VERSION__}
       />
       
