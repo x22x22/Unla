@@ -35,6 +35,8 @@ loader.config({
 loader.init().then(() => {
   // Monaco is now loaded and available
   console.log('Monaco Editor loaded from local files');
+}).catch((error) => {
+  console.error('Failed to load Monaco Editor:', error);
 });
 
 // Initialize theme immediately before React renders

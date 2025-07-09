@@ -224,9 +224,9 @@ export function MCPServersConfig({
                   onChange={(e) => updateServer(index, 'type', e.target.value)}
                   aria-label={t('gateway.mcp_type')}
                 >
-                  <SelectItem key="stdio">stdio</SelectItem>
-                  <SelectItem key="sse">sse</SelectItem>
-                  <SelectItem key="streamable-http">streamable-http</SelectItem>
+                  <SelectItem key="stdio" textValue="stdio">stdio</SelectItem>
+                  <SelectItem key="sse" textValue="sse">sse</SelectItem>
+                  <SelectItem key="streamable-http" textValue="streamable-http">streamable-http</SelectItem>
                 </Select>
               </div>
 
@@ -236,8 +236,8 @@ export function MCPServersConfig({
                 onChange={(e) => updateServer(index, 'policy', e.target.value)}
                 aria-label={t('gateway.startup_policy')}
               >
-                <SelectItem key="onDemand">{t('gateway.policy_on_demand')}</SelectItem>
-                <SelectItem key="onStart">{t('gateway.policy_on_start')}</SelectItem>
+                <SelectItem key="onDemand" textValue={t('gateway.policy_on_demand')}>{t('gateway.policy_on_demand')}</SelectItem>
+                <SelectItem key="onStart" textValue={t('gateway.policy_on_start')}>{t('gateway.policy_on_start')}</SelectItem>
               </Select>
 
               {(server.type === 'stdio' || !server.type) && (
