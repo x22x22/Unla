@@ -41,9 +41,9 @@ Unla 提供开箱即用的 Docker 启动方式。完整部署与配置说明请�
 配置环境变量：
 
 ```bash
-export APISERVER_JWT_SECRET_KEY="fec6d38f73d4211318e7c85617f0e333PlsChangeMe"
+export APISERVER_JWT_SECRET_KEY="changeme-please-generate-a-random-secret"
 export SUPER_ADMIN_USERNAME="admin"
-export SUPER_ADMIN_PASSWORD="297df52fbc321ebf7198d497fe1c9206PlsChangeMe"
+export SUPER_ADMIN_PASSWORD="changeme-please-use-a-secure-password"
 ```
 
 一键拉起：
@@ -68,9 +68,9 @@ docker run -d \
 > 在中国境内的设备可以使用阿里云仓库的镜像并自定义模型（这边示例是千问）：
 >
 > ```bash
-> export APISERVER_JWT_SECRET_KEY="fec6d38f73d4211318e7c85617f0e333PlsChangeMe"
+> export APISERVER_JWT_SECRET_KEY="changeme-please-generate-a-random-secret"
 > export SUPER_ADMIN_USERNAME="admin"
-> export SUPER_ADMIN_PASSWORD="297df52fbc321ebf7198d497fe1c9206PlsChangeMe"
+> export SUPER_ADMIN_PASSWORD="changeme-please-use-a-secure-password"
 > ```
 >
 > ```bash

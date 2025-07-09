@@ -41,9 +41,9 @@ Unla supports a ready-to-run Docker deployment. Full deployment and configuratio
 Configure environment variables:
 
 ```bash
-export APISERVER_JWT_SECRET_KEY="fec6d38f73d4211318e7c85617f0e333PlsChangeMe"
+export APISERVER_JWT_SECRET_KEY="changeme-please-generate-a-random-secret"
 export SUPER_ADMIN_USERNAME="admin"
-export SUPER_ADMIN_PASSWORD="297df52fbc321ebf7198d497fe1c9206PlsChangeMe"
+export SUPER_ADMIN_PASSWORD="changeme-please-use-a-secure-password"
 ```
 
 Launch the container:
