@@ -5,7 +5,7 @@
 [![English](https://img.shields.io/badge/English-Click-yellow)](../README.md)
 [![简体中文](https://img.shields.io/badge/简体中文-点击查看-orange)](README.zh-CN.md)
 [![Release](https://img.shields.io/github/v/release/mcp-ecosystem/mcp-gateway)](https://github.com/amoylab/unla/releases)
-[![文档](https://img.shields.io/badge/文档-在线阅读-blue)](https://mcp.ifuryst.com)
+[![文档](https://img.shields.io/badge/文档-在线阅读-blue)](https://docs.unla.amoylab.com)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mcp-ecosystem/mcp-gateway)
 [![Discord](https://img.shields.io/badge/Discord-加入讨论-5865F2?logo=discord&logoColor=white)](https://discord.gg/udf69cT9TY)
 [![Go Report Card](https://goreportcard.com/badge/github.com/amoylab/unla)](https://goreportcard.com/report/github.com/amoylab/unla)
@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/69480eda-7aa7-4be7-9bc7-cae57fe16c54
 
 ## 🚀 快速开始
 
-Unla 提供开箱即用的 Docker 启动方式。完整部署与配置说明请参考 [文档](https://mcp.ifuryst.com/getting-started/quick-start)。
+Unla 提供开箱即用的 Docker 启动方式。完整部署与配置说明请参考 [文档](https://docs.unla.amoylab.com/getting-started/quick-start)。
 
 ### 一键启动 Unla
 
@@ -118,7 +118,7 @@ docker run -d \
 1. 使用 Web 界面中的 MCP Chat 页面
 2. 使用您自己的 MCP Client（**推荐**）
 
-📖 查看完整指南 → [快速开始文档 »](https://mcp.ifuryst.com/getting-started/quick-start)
+📖 查看完整指南 → [快速开始文档 »](https://docs.unla.amoylab.com/getting-started/quick-start)
 
 ---
 
@@ -161,7 +161,7 @@ docker run -d \
 
 更多使用方式、配置示例、集成说明请访问文档站点：
 
-👉 **https://mcp.ifuryst.com**
+👉 **https://docs.unla.amoylab.com**
 
 ---
 

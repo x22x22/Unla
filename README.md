@@ -5,7 +5,7 @@
 [![English](https://img.shields.io/badge/English-Click-yellow)](./README.md)
 [![简体中文](https://img.shields.io/badge/简体中文-点击查看-orange)](docs/README.zh-CN.md)
 [![Release](https://img.shields.io/github/v/release/mcp-ecosystem/mcp-gateway)](https://github.com/amoylab/unla/releases)
-[![Docs](https://img.shields.io/badge/Docs-View%20Online-blue)](https://mcp.ifuryst.com)
+[![Docs](https://img.shields.io/badge/Docs-View%20Online-blue)](https://docs.unla.amoylab.com)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mcp-ecosystem/mcp-gateway)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/udf69cT9TY)
 [![Go Report Card](https://goreportcard.com/badge/github.com/amoylab/unla)](https://goreportcard.com/report/github.com/amoylab/unla)
@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/69480eda-7aa7-4be7-9bc7-cae57fe16c54
 
 ## 🚀 Getting Started
 
-Unla supports a ready-to-run Docker deployment. Full deployment and configuration instructions are available in the [docs](https://mcp.ifuryst.com/getting-started/quick-start).
+Unla supports a ready-to-run Docker deployment. Full deployment and configuration instructions are available in the [docs](https://docs.unla.amoylab.com/getting-started/quick-start).
 
 ### Quick Launch with Docker
 
@@ -93,7 +93,7 @@ You can test the service using:
 1. The MCP Chat page in the web interface
 2. Your own MCP Client (**recommended**)
 
-📖 Read the full guide → [Quick Start »](https://mcp.ifuryst.com/getting-started/quick-start)
+📖 Read the full guide → [Quick Start »](https://docs.unla.amoylab.com/getting-started/quick-start)
 
 ---
 
@@ -136,7 +136,7 @@ You can test the service using:
 
 For more usage patterns, configuration examples, and integration guides, please visit:
 
-👉 **https://mcp.ifuryst.com**
+👉 **https://docs.unla.amoylab.com**
 
 ---
 
