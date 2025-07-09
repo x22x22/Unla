@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
 
 import { BUILTIN_PROVIDERS, getProviderDefaultConfig, getProviderModels, getDefaultBaseURL, buildEndpointURL } from '../config/llm-providers-adapter';
+import api from '../services/api';
 import { LLMProvider, LLMModel, CreateLLMProviderForm, UpdateLLMProviderForm } from '../types/llm';
 
 const LLM_STORAGE_KEY = 'unla_llm_providers';
@@ -34,7 +34,7 @@ export const useLLMConfig = () => {
         } else {
           setDefaultProvider(null);
         }
-      } catch (err) {
+      } catch {
         setDefaultProvider(null);
       }
     }

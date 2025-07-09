@@ -6,7 +6,8 @@ import {
   Select,
   SelectItem,
   Chip,
-  Tooltip
+  Tooltip,
+  Selection
 } from '@heroui/react';
 import { Send, Settings, Square, Zap, ChevronDown, ChevronUp, X } from 'lucide-react';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -22,12 +23,12 @@ import { useLLMConfig } from '@/hooks/useLLMConfig';
 import { getMCPServers, getChatMessages, saveChatMessage, getCurrentUser } from '@/services/api';
 import { llmChatService } from '@/services/llm-chat';
 import { mcpService } from '@/services/mcp';
+import { getSystemPrompt, saveSystemPrompt } from '@/services/systemprompt';
 import { Gateway } from '@/types/gateway';
-import { LLMProvider } from '@/types/llm';
+import { LLMProvider, LLMModel } from '@/types/llm';
 import { Tool } from '@/types/mcp';
 import { Message, ToolCall, ToolResult } from '@/types/message';
 import { toast } from '@/utils/toast';
-import { getSystemPrompt, saveSystemPrompt } from '@/services/systemprompt';
 
 
 export function LLMChatInterface() {
@@ -85,7 +86,7 @@ export function LLMChatInterface() {
     if (savedProviderId) {
       targetProvider = enabledProviders.find((p: LLMProvider) => p.id === savedProviderId);
       if (targetProvider && savedModelId) {
-        const hasModel = targetProvider.models.find((m: any) => m.id === savedModelId);
+        const hasModel = targetProvider.models.find((m: LLMModel) => m.id === savedModelId);
         if (hasModel) {
           targetModelId = savedModelId;
         }
@@ -95,7 +96,7 @@ export function LLMChatInterface() {
     // Fallback to default selection if no valid saved selection
     if (!targetProvider) {
       targetProvider = enabledProviders[0];
-      const enabledModel = targetProvider.models.find((m: any) => m.enabled);
+      const enabledModel = targetProvider.models.find((m: LLMModel) => m.enabled);
       const defaultModel = enabledModel || targetProvider.models[0];
       if (defaultModel) {
         targetModelId = defaultModel.id;
@@ -119,9 +120,9 @@ export function LLMChatInterface() {
   // Reset model selection when provider changes (only if model doesn't belong to new provider)
   useEffect(() => {
     if (selectedProvider && selectedModel) {
-      const hasModel = selectedProvider.models.find((m: any) => m.id === selectedModel);
+      const hasModel = selectedProvider.models.find((m: LLMModel) => m.id === selectedModel);
       if (!hasModel) {
-        const enabledModel = selectedProvider.models.find((m: any) => m.enabled);
+        const enabledModel = selectedProvider.models.find((m: LLMModel) => m.enabled);
         const defaultModel = enabledModel || selectedProvider.models[0];
         if (defaultModel) {
           setSelectedModel(defaultModel.id);
@@ -317,7 +318,7 @@ export function LLMChatInterface() {
         },
         async (newToolCalls) => {
           // Patch tool calls to always have originalName
-          const patchedToolCalls = newToolCalls.map((tc: any) => ({
+          const patchedToolCalls = newToolCalls.map((tc: ToolCall) => ({
             ...tc,
             function: {
               ...tc.function,
@@ -395,7 +396,7 @@ export function LLMChatInterface() {
       id: 'system-prompt',
       session_id: sessionId!,
       content: systemPrompt,
-      sender: 'system' as any,
+      sender: 'system' as const,
       timestamp: new Date().toISOString(),
     };
     return [sysMsg, ...userMessages];
@@ -577,7 +578,7 @@ export function LLMChatInterface() {
       try {
         const response = await getCurrentUser();
         setUserInfo(response.data);
-      } catch (error) {
+      } catch {
         // Optionally handle error
       }
     };
@@ -595,7 +596,7 @@ export function LLMChatInterface() {
       try {
         const prompt = await getSystemPrompt();
         setSystemPrompt(prompt);
-      } catch (error) {
+      } catch {
         setSystemPrompt('');
       }
     })();
@@ -694,8 +695,8 @@ export function LLMChatInterface() {
                     isDisabled={!selectedProvider.models.length}
                   >
                     {selectedProvider.models
-                      .filter((model: any) => model.enabled || model.id === selectedModel)
-                      .map((model: any) => (
+                      .filter((model: LLMModel) => model.enabled || model.id === selectedModel)
+                      .map((model: LLMModel) => (
                         <SelectItem key={model.id} textValue={model.name || model.id}>
                           <div className="flex items-center justify-between w-full">
                             <span className="truncate">{model.name || model.id}</span>
@@ -763,7 +764,7 @@ export function LLMChatInterface() {
                   placeholder={t('chat.selectMCPServers')}
                   selectionMode="multiple"
                   selectedKeys={activeServices}
-                  onSelectionChange={(keys: any) => setActiveServices(Array.from(keys) as string[])}
+                  onSelectionChange={(keys: Selection) => setActiveServices(Array.from(keys) as string[])}
                   className="w-48"
                   size="sm"
                 >
@@ -826,7 +827,9 @@ export function LLMChatInterface() {
                         setIsSystemPromptModalOpen(false);
                         try {
                           await saveSystemPrompt(systemPromptDraft);
-                        } catch {}
+                        } catch {
+                          // Ignore save errors
+                        }
                       }}
                       disabled={isGenerating}
                     >

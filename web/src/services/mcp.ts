@@ -168,7 +168,7 @@ class MCPService {
       };
 
       // Prepare options for request
-      const options: any = this.lastEventIds.get(serverName)
+      const options: { resumptionToken?: string } = this.lastEventIds.get(serverName)
         ? { resumptionToken: this.lastEventIds.get(serverName) }
         : {};
 

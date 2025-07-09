@@ -577,7 +577,7 @@ export const saveChatMessage = async (message: {
   id: string;
   session_id: string;
   content: string;
-  sender: 'user' | 'bot';
+  sender: 'user' | 'bot' | 'system';
   timestamp: string;
   reasoning_content?: string;
   toolCalls?: Array<{

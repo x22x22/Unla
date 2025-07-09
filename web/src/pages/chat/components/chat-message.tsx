@@ -34,7 +34,7 @@ export function ChatMessage({ message, messages, onToolCall }: ChatMessageProps)
   const handleRunTool = async (tool: ToolCall) => {
     try {
       // Use originalName if present, else fallback
-      const toolNameForParsing = (tool?.function as any)?.originalName || tool?.function?.name;
+      const toolNameForParsing = tool?.function?.originalName || tool?.function?.name;
       if (!toolNameForParsing) {
         toast.error(t('errors.invalid_tool_name'), {
           duration: 3000,
@@ -173,7 +173,7 @@ export function ChatMessage({ message, messages, onToolCall }: ChatMessageProps)
         )}
         {message.toolCalls?.filter(tool => tool?.function?.name).map((tool, index) => {
           const toolResult = findToolResult(tool.id);
-          const toolDisplayName = (tool.function as any).originalName || tool.function.name;
+          const toolDisplayName = tool.function.originalName || tool.function.name;
           return (
             <div key={index} className="mt-3 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 overflow-hidden">
               <div className="flex items-center justify-between p-3 bg-blue-100/70 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800">
