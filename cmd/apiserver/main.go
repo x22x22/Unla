@@ -216,6 +216,10 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 		protected.PUT("/chat/sessions/:sessionId/title", chatHandler.HandleUpdateChatSessionTitle)
 		protected.POST("/chat/messages", chatHandler.HandleSaveChatMessage)
 
+		// System prompt routes
+		protected.GET("/chat/systemprompt", systemPromptHandler.GetSystemPrompt)
+		protected.PUT("/chat/systemprompt", systemPromptHandler.SaveSystemPrompt)
+
 		// Default LLM provider endpoint
 		protected.GET("/defaultllmprovider", chatHandler.HandleDefaultLLMProviders)
 	}
