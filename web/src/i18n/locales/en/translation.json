@@ -309,7 +309,7 @@
     "sse_prefix": "SSE Prefix",
     "sse_prefix_placeholder": "Enter SSE prefix",
     "prompt": "Prompt",
-    "prompts": "Prompts",    
+    "prompts": "Prompts",
     "prompt_name": "Prompt Name",
     "arguments": "Arguments",
     "required": "Required",
@@ -419,6 +419,7 @@
     "session_title_placeholder": "Enter new session title",
     "systemPrompt": "System Prompt",
     "systemPromptPlaceholder": "Set a custom system prompt for the assistant (optional)",
+    "editSystemPrompt": "Edit System Prompt",
     "authTokenPlaceholder": "Enter authentication token",
     "authToken": "Authentication Token"
   },
