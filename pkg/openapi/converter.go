@@ -98,11 +98,11 @@ func (c *Converter) Convert(specData []byte) (*config.MCPConfig, error) {
 	// Create a default router for the server
 	router := config.RouterConfig{
 		Server: mcpConfig.Name,
-		Prefix: fmt.Sprintf("/mcp/%s", rs), // Generate a random prefix for each router
+		Prefix: fmt.Sprintf("/gateway/%s", rs), // Generate a random prefix for each router
 		CORS: &config.CORSConfig{
 			AllowOrigins:     []string{"*"},
 			AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-			AllowHeaders:     []string{"Content-Type", "Authorization", "Mcp-Session-Id" ,"mcp-protocol-version"},
+			AllowHeaders:     []string{"Content-Type", "Authorization", "Mcp-Session-Id", "mcp-protocol-version"},
 			ExposeHeaders:    []string{"Mcp-Session-Id", "mcp-protocol-version"},
 			AllowCredentials: true,
 		},
@@ -336,13 +336,13 @@ func (c *Converter) ConvertWithOptions(specData []byte, tenant, prefix string) (
 	if err != nil {
 		return nil, err
 	}
-    // Remove leading / from tenant if present
+	// Remove leading / from tenant if present
 	cleanTenant := tenant
 	if strings.HasPrefix(cleanTenant, "/") {
 		cleanTenant = strings.TrimPrefix(cleanTenant, "/")
-	}	
+	}
 	if tenant != "" && prefix != "" {
-		config.Tenant = cleanTenant 
+		config.Tenant = cleanTenant
 		if len(config.Routers) > 0 {
 			config.Routers[0].Prefix = cleanTenant + "/" + prefix
 		}
