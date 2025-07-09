@@ -13,16 +13,6 @@
 
 ---
 
-## 🎯 Support Us on Product Hunt
-
-We just launched **MCP Gateway** on Product Hunt! 🚀  
-If you find this project interesting or helpful, we'd love your support.  
-Every upvote helps more developers discover it! ❤️
-
-<a href="https://www.producthunt.com/posts/mcp-gateway?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-mcp&#0045;gateway" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=958310&theme=light&t=1745767484477" alt="MCP&#0032;Gateway - Turn&#0032;APIs&#0032;into&#0032;MCP&#0032;endpoints&#0044;without&#0032;changing&#0032;a&#0032;line&#0032;of&#0032;code | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
-
----
-
 > ⚡ **Note**: Unla is under rapid development! We strive to maintain backward compatibility, but it cannot be 100% guaranteed. Please make sure to check version changes carefully when upgrading. Due to the fast iteration, documentation updates may sometimes lag behind. If you encounter any issues, feel free to search or ask for help via [Discord](https://discord.gg/udf69cT9TY) or [Issues](https://github.com/amoylab/unla/issues) ❤️
 
 ---
@@ -114,35 +104,35 @@ You can test the service using:
 ## 🚀 Core Features
 
 ### 🔌 Protocol & Proxy Capabilities
-- [x] Support for converting RESTful APIs to MCP Server — Client → MCP Gateway → APIs  
-- [x] Support proxying MCP services — Client → MCP Gateway → MCP Servers  
-- [ ] Support for converting gRPC to MCP Server — Client → MCP Gateway → gRPC  
-- [ ] Support for converting WebSocket to MCP Server — Client → MCP Gateway → WebSocket  
-- [x] Support for MCP SSE  
-- [x] Support for MCP Streamable HTTP  
-- [x] Support for MCP responses including text, images, and audio  
+- [x] Support for converting RESTful APIs to MCP Server — Client → MCP Gateway → APIs
+- [x] Support proxying MCP services — Client → MCP Gateway → MCP Servers
+- [ ] Support for converting gRPC to MCP Server — Client → MCP Gateway → gRPC
+- [ ] Support for converting WebSocket to MCP Server — Client → MCP Gateway → WebSocket
+- [x] Support for MCP SSE
+- [x] Support for MCP Streamable HTTP
+- [x] Support for MCP responses including text, images, and audio
 
 ### 🧠 Session & Multi-Tenant Support
-- [x] Persistent and recoverable session support  
-- [x] Multi-tenant support  
-- [ ] Support for grouping and aggregating MCP servers  
+- [x] Persistent and recoverable session support
+- [x] Multi-tenant support
+- [ ] Support for grouping and aggregating MCP servers
 
 ### 🛠 Configuration & Management
-- [x] Automatic configuration fetching and seamless hot-reloading  
-- [x] Configuration persistence (Disk/SQLite/PostgreSQL/MySQL)  
-- [x] Configuration sync via OS Signals, HTTP, or Redis PubSub  
-- [x] Version control for configuration  
+- [x] Automatic configuration fetching and seamless hot-reloading
+- [x] Configuration persistence (Disk/SQLite/PostgreSQL/MySQL)
+- [x] Configuration sync via OS Signals, HTTP, or Redis PubSub
+- [x] Version control for configuration
 
 ### 🔐 Security & Authentication
-- [x] OAuth-based pre-authentication support for MCP Servers  
+- [x] OAuth-based pre-authentication support for MCP Servers
 
 ### 🖥 User Interface
-- [x] Intuitive and lightweight management UI  
+- [x] Intuitive and lightweight management UI
 
 ### 📦 Deployment & Operations
-- [x] Multi-replica service support  
-- [x] Docker support  
-- [x] Kubernetes and Helm deployment support  
+- [x] Multi-replica service support
+- [x] Docker support
+- [x] Kubernetes and Helm deployment support
 
 ---
 
