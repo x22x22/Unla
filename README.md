@@ -41,8 +41,6 @@ Unla supports a ready-to-run Docker deployment. Full deployment and configuratio
 Configure environment variables:
 
 ```bash
-export OPENAI_API_KEY="sk-eed837fb0b4a62ee69abc29a983492b7PlsChangeMe"
-export OPENAI_MODEL="gpt-4o-mini"
 export APISERVER_JWT_SECRET_KEY="fec6d38f73d4211318e7c85617f0e333PlsChangeMe"
 export SUPER_ADMIN_USERNAME="admin"
 export SUPER_ADMIN_PASSWORD="297df52fbc321ebf7198d497fe1c9206PlsChangeMe"
@@ -60,8 +58,6 @@ docker run -d \
   -p 5236:5236 \
   -e ENV=production \
   -e TZ=Asia/Shanghai \
-  -e OPENAI_API_KEY=${OPENAI_API_KEY} \
-  -e OPENAI_MODEL=${OPENAI_MODEL} \
   -e APISERVER_JWT_SECRET_KEY=${APISERVER_JWT_SECRET_KEY} \
   -e SUPER_ADMIN_USERNAME=${SUPER_ADMIN_USERNAME} \
   -e SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD} \

@@ -41,8 +41,6 @@ Unla 提供开箱即用的 Docker 启动方式。完整部署与配置说明请�
 配置环境变量：
 
 ```bash
-export OPENAI_API_KEY="sk-eed837fb0b4a62ee69abc29a983492b7PlsChangeMe"
-export OPENAI_MODEL="gpt-4o-mini"
 export APISERVER_JWT_SECRET_KEY="fec6d38f73d4211318e7c85617f0e333PlsChangeMe"
 export SUPER_ADMIN_USERNAME="admin"
 export SUPER_ADMIN_PASSWORD="297df52fbc321ebf7198d497fe1c9206PlsChangeMe"
@@ -60,8 +58,6 @@ docker run -d \
   -p 5236:5236 \
   -e ENV=production \
   -e TZ=Asia/Shanghai \
-  -e OPENAI_API_KEY=${OPENAI_API_KEY} \
-  -e OPENAI_MODEL=${OPENAI_MODEL} \
   -e APISERVER_JWT_SECRET_KEY=${APISERVER_JWT_SECRET_KEY} \
   -e SUPER_ADMIN_USERNAME=${SUPER_ADMIN_USERNAME} \
   -e SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD} \
@@ -72,9 +68,6 @@ docker run -d \
 > 在中国境内的设备可以使用阿里云仓库的镜像并自定义模型（这边示例是千问）：
 >
 > ```bash
-> export OPENAI_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1/"
-> export OPENAI_API_KEY="sk-eed837fb0b4a62ee69abc29a983492b7PlsChangeMe"
-> export OPENAI_MODEL="qwen-turbo"
 > export APISERVER_JWT_SECRET_KEY="fec6d38f73d4211318e7c85617f0e333PlsChangeMe"
 > export SUPER_ADMIN_USERNAME="admin"
 > export SUPER_ADMIN_PASSWORD="297df52fbc321ebf7198d497fe1c9206PlsChangeMe"
@@ -90,9 +83,6 @@ docker run -d \
 >   -p 5236:5236 \
 >   -e ENV=production \
 >   -e TZ=Asia/Shanghai \
->   -e OPENAI_BASE_URL=${OPENAI_BASE_URL} \
->   -e OPENAI_API_KEY=${OPENAI_API_KEY} \
->   -e OPENAI_MODEL=${OPENAI_MODEL} \
 >   -e APISERVER_JWT_SECRET_KEY=${APISERVER_JWT_SECRET_KEY} \
 >   -e SUPER_ADMIN_USERNAME=${SUPER_ADMIN_USERNAME} \
 >   -e SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD} \
