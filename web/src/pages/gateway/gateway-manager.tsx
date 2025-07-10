@@ -1,6 +1,4 @@
 import {
-  Autocomplete,
-  AutocompleteItem,
   Button,
   Card,
   CardBody,
@@ -17,6 +15,8 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Select,
+  SelectItem,
   Tab,
   Table,
   TableBody,
@@ -100,8 +100,7 @@ export function GatewayManager() {
   const [newConfig, setNewConfig] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(true);
   const [tenants, setTenants] = React.useState<Tenant[]>([]);
-  const [selectedTenants, setSelectedTenants] = React.useState<Tenant[]>([]);
-  const [tenantInputValue, setTenantInputValue] = React.useState('');
+  const [selectedTenant, setSelectedTenant] = React.useState<string | undefined>(undefined);
   const [viewMode, setViewMode] = React.useState<string>('table');
   const [isDark, setIsDark] = React.useState(() => {
     return document.documentElement.classList.contains('dark');
@@ -152,8 +151,9 @@ export function GatewayManager() {
     const fetchMCPServers = async () => {
       try {
         setIsLoading(true);
-        // Use the first selected tenant ID for filtering if available
-        const tenantId = selectedTenants.length > 0 ? selectedTenants[0].id : undefined;
+        // Use the selected tenant for filtering if available  
+        const tenant = tenants.find(t => t.name === selectedTenant);
+        const tenantId = tenant?.id;
         const servers = await getMCPServers(tenantId);
         setMCPServers(servers);
       } catch {
@@ -164,7 +164,7 @@ export function GatewayManager() {
     };
 
     fetchMCPServers();
-  }, [t, selectedTenants]);
+  }, [t, selectedTenant, tenants]);
 
   // Get user's authorized tenants
   React.useEffect(() => {
@@ -172,8 +172,18 @@ export function GatewayManager() {
       try {
         const tenantsData = await getUserAuthorizedTenants();
         setTenants(tenantsData);
-      } catch {
-        toast.error(t('errors.fetch_authorized_tenants'));
+      } catch (error) {
+        // Check if it's an authentication error
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { status: number } };
+          if (axiosError.response.status === 401) {
+            toast.error(t('errors.authentication_required'));
+          } else {
+            toast.error(t('errors.fetch_authorized_tenants'));
+          }
+        } else {
+          toast.error(t('errors.fetch_authorized_tenants'));
+        }
       }
     };
 
@@ -282,7 +292,8 @@ export function GatewayManager() {
 
       if (currentMCPServer) {
         await updateMCPServer(cleanedConfig);
-        const tenantId = selectedTenants.length > 0 ? selectedTenants[0].id : undefined;
+        const tenant = tenants.find(t => t.name === selectedTenant);
+        const tenantId = tenant?.id;
         const servers = await getMCPServers(tenantId);
         setMCPServers(servers);
         toast.success(t('gateway.edit_success'));
@@ -303,7 +314,7 @@ export function GatewayManager() {
 
     try {
       await deleteMCPServer(serverToDelete.tenant, serverToDelete.name);
-      const tenantId = selectedTenants.length > 0 ? selectedTenants[0].id : undefined;
+      const tenantId = selectedTenant?.id;
       const servers = await getMCPServers(tenantId);
       setMCPServers(servers);
       toast.success(t('gateway.delete_success'));
@@ -329,7 +340,7 @@ export function GatewayManager() {
     try {
       setIsLoading(true);
       await syncMCPServers();
-      const tenantId = selectedTenants.length > 0 ? selectedTenants[0].id : undefined;
+      const tenantId = selectedTenant?.id;
       const servers = await getMCPServers(tenantId);
       setMCPServers(servers);
       toast.success(t('gateway.sync_success'));
@@ -383,7 +394,7 @@ export function GatewayManager() {
 
       // If YAML is valid, proceed with creation
       await createMCPServer(cleanedConfig);
-      const tenantId = selectedTenants.length > 0 ? selectedTenants[0].id : undefined;
+      const tenantId = selectedTenant?.id;
       const servers = await getMCPServers(tenantId);
       setMCPServers(servers);
       onCreateOpenChange();
@@ -396,7 +407,7 @@ export function GatewayManager() {
 
   const handleImportSuccess = async () => {
     try {
-      const tenantId = selectedTenants.length > 0 ? selectedTenants[0].id : undefined;
+      const tenantId = selectedTenant?.id;
       const servers = await getMCPServers(tenantId);
       setMCPServers(servers);
       onImportOpenChange();
@@ -435,35 +446,9 @@ export function GatewayManager() {
     })
   };
 
-  // Define custom filter function for tenants
-  const customTenantFilter = (inputValue: string, items: Tenant[]) => {
-    const lowerCaseInput = inputValue.toLowerCase();
-    return items.filter(item =>
-      item.name.toLowerCase().includes(lowerCaseInput) ||
-      item.prefix.toLowerCase().includes(lowerCaseInput)
-    );
+  const handleTenantSelectionChange = (tenantName: string) => {
+    setSelectedTenant(tenantName);
   };
-
-  const handleTenantSelect = (key: React.Key | null) => {
-    if (key === null) return;
-
-    const tenant = tenants.find(t => t.id === parseInt(key.toString(), 10));
-    if (tenant && !selectedTenants.some(t => t.id === tenant.id)) {
-      setSelectedTenants(prev => [...prev, tenant]);
-    }
-    setTenantInputValue('');
-  };
-
-  const handleRemoveTenant = (tenantId: number) => {
-    setSelectedTenants(prev => prev.filter(t => t.id !== tenantId));
-  };
-
-  // Filter out already selected tenants for selection
-  const availableTenants = React.useMemo(() => {
-    return tenants.filter(tenant =>
-      !selectedTenants.some(selected => selected.id === tenant.id)
-    );
-  }, [tenants, selectedTenants]);
 
   const handleCopyWithIcon = (text: string, key: string) => {
     handleCopyToClipboard(text);
@@ -512,52 +497,28 @@ export function GatewayManager() {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        <div className="max-w-md">
-          <label className="block text-sm font-medium mb-1">{t('gateway.select_tenant')}</label>
-
-          {/* Display selected tenants */}
-          <div className="flex flex-wrap gap-1 mb-2">
-            {selectedTenants.map(tenant => (
-              <Chip
-                key={tenant.id}
-                onClose={() => handleRemoveTenant(tenant.id)}
-                variant="flat"
-                aria-label={`${tenant.name} (${tenant.prefix})`}
-                isDisabled={isOpen || isCreateOpen || isImportOpen}
-              >
-                {`${tenant.name}(${tenant.prefix})`}
-              </Chip>
-            ))}
-          </div>
-
-          <Autocomplete
-            placeholder={t('gateway.search_tenant')}
-            defaultItems={availableTenants}
-            inputValue={tenantInputValue}
-            onInputChange={setTenantInputValue}
-            onSelectionChange={handleTenantSelect}
-            menuTrigger="focus"
-            isClearable
-            startContent={<LocalIcon icon="lucide:search" className="text-gray-400" />}
-            listboxProps={{
-              emptyContent: t('common.no_results')
+        <div className="max-w-lg">
+          <Select
+            label={t('gateway.select_tenant')}
+            placeholder={t('gateway.select_tenant')}
+            selectedKeys={selectedTenant ? [selectedTenant] : []}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
+              if (selectedKey) {
+                handleTenantSelectionChange(selectedKey);
+              }
             }}
-            items={customTenantFilter(tenantInputValue, availableTenants)}
-            aria-label={t('gateway.search_tenant')}
-            isDisabled={isOpen || isCreateOpen || isImportOpen}
+            className="w-full min-w-56"
           >
-            {(tenant) => (
-              <AutocompleteItem
-                key={tenant.id.toString()}
+            {tenants.map((tenant) => (
+              <SelectItem 
+                key={tenant.name} 
                 textValue={`${tenant.name}(${tenant.prefix})`}
               >
-                <div className="flex flex-col">
-                  <span>{tenant.name}</span>
-                  <span className="text-xs text-gray-500">{tenant.prefix}</span>
-                </div>
-              </AutocompleteItem>
-            )}
-          </Autocomplete>
+                {tenant.name}({tenant.prefix})
+              </SelectItem>
+            ))}
+          </Select>
         </div>
 
         <Tabs
