@@ -69,8 +69,8 @@ export function Layout({ children }: LayoutProps) {
 
   const llmConfigAdminOnly = window.RUNTIME_CONFIG?.LLM_CONFIG_ADMIN_ONLY;
   const canShowLLM =
-    llmConfigAdminOnly === 'N' ||
-    (llmConfigAdminOnly === 'Y' && userInfo?.role === 'admin');
+    llmConfigAdminOnly === false ||
+    (llmConfigAdminOnly === true && userInfo?.role === 'admin');
 
   const menuGroups = [
     {

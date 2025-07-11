@@ -151,7 +151,7 @@ export function GatewayManager() {
     const fetchMCPServers = async () => {
       try {
         setIsLoading(true);
-        // Use the selected tenant for filtering if available  
+        // Use the selected tenant for filtering if available
         const tenant = tenants.find(t => t.name === selectedTenant);
         const tenantId = tenant?.id;
         const servers = await getMCPServers(tenantId);
@@ -500,7 +500,6 @@ export function GatewayManager() {
         <div className="max-w-lg">
           <Select
             label={t('gateway.select_tenant')}
-            placeholder={t('gateway.select_tenant')}
             selectedKeys={selectedTenant ? [selectedTenant] : []}
             onSelectionChange={(keys) => {
               const selectedKey = Array.from(keys)[0] as string;
@@ -511,8 +510,8 @@ export function GatewayManager() {
             className="w-full min-w-56"
           >
             {tenants.map((tenant) => (
-              <SelectItem 
-                key={tenant.name} 
+              <SelectItem
+                key={tenant.name}
                 textValue={`${tenant.name}(${tenant.prefix})`}
               >
                 {tenant.name}({tenant.prefix})
