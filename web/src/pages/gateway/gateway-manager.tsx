@@ -1177,11 +1177,19 @@ export function GatewayManager() {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isImportOpen} onOpenChange={onImportOpenChange} size="2xl">
+      <Modal isOpen={isImportOpen} onOpenChange={onImportOpenChange} size="3xl" scrollBehavior="inside">
         <ModalContent>
-          <ModalHeader>{t('gateway.import_openapi')}</ModalHeader>
-          <ModalBody>
-            <OpenAPIImport onSuccess={handleImportSuccess} />
+          <ModalHeader className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <LocalIcon icon="lucide:file-plus" className="text-primary" />
+              {t('gateway.import_openapi')}
+            </div>
+            <p className="text-sm text-default-500 font-normal">
+              {t('gateway.import_openapi_description', 'Import OpenAPI specification to create MCP server configuration')}
+            </p>
+          </ModalHeader>
+          <ModalBody className="py-6">
+            <OpenAPIImport onSuccess={handleImportSuccess} selectedTenant={selectedTenant} />
           </ModalBody>
           <ModalFooter>
             <Button color="danger" variant="light" onPress={() => onImportOpenChange()}>
