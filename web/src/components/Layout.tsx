@@ -281,7 +281,7 @@ export function Layout({ children }: LayoutProps) {
                             : 'hover:bg-accent text-foreground'
                         }`}
                       >
-                        <LocalIcon icon={item.icon} className="text-xl" />
+                        <LocalIcon icon={item.icon} width={24} height={24} />
                       </Link>
                     </Tooltip>
                   ) : (
@@ -296,7 +296,7 @@ export function Layout({ children }: LayoutProps) {
                           : 'hover:bg-accent text-foreground'
                       }`}
                     >
-                      <LocalIcon icon={item.icon} className="text-xl mr-3" />
+                      <LocalIcon icon={item.icon} width={20} height={20} className="mr-3" />
                       <span>{item.label}</span>
                     </Link>
                   )
