@@ -1,7 +1,7 @@
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input } from '@heroui/react';
-import { t } from 'i18next';
 import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useTranslation } from 'react-i18next';
 
 import LocalIcon from '@/components/LocalIcon';
 import { importOpenAPI, getTenants } from '@/services/api';
@@ -14,6 +14,7 @@ interface OpenAPIImportProps {
 }
 
 const OpenAPIImport: React.FC<OpenAPIImportProps> = ({ onSuccess, selectedTenant: inheritedTenant }) => {
+  const { t } = useTranslation();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<string>('');
   const [prefix, setPrefix] = useState('');
@@ -28,7 +29,7 @@ const OpenAPIImport: React.FC<OpenAPIImportProps> = ({ onSuccess, selectedTenant
           // Set default tenant selection
           if (inheritedTenant) {
             // Use inherited tenant from gateway page
-            const tenant = data.find(t => t.name === inheritedTenant);
+            const tenant = data.find((t: Tenant) => t.name === inheritedTenant);
             if (tenant) {
               setSelectedTenant(tenant.name);
             }
@@ -40,7 +41,7 @@ const OpenAPIImport: React.FC<OpenAPIImportProps> = ({ onSuccess, selectedTenant
         .catch(() => toast.error(t('errors.fetch_tenants')))
         .finally(() => setLoadingTenants(false));
     }
-  }, [tenants.length, inheritedTenant]);
+  }, [tenants.length, inheritedTenant, t]);
 
   const onDrop = useCallback(async (acceptedFiles: globalThis.File[]) => {
     if (acceptedFiles.length === 0) {
@@ -71,7 +72,7 @@ const OpenAPIImport: React.FC<OpenAPIImportProps> = ({ onSuccess, selectedTenant
         duration: 3000,
       })
     }
-  }, [onSuccess, selectedTenant, prefix, tenants]);
+  }, [onSuccess, selectedTenant, prefix, tenants, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
