@@ -19,12 +19,14 @@ FROM node:20.18.0 AS web-builder
 WORKDIR /app/web
 
 COPY web/package*.json ./
+COPY web/pnpm-lock.yaml ./
 
-RUN npm install
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile
 
 COPY web/ .
 
-RUN npm run build
+RUN pnpm run build
 
 FROM nginx:1.27.5-bookworm
 
