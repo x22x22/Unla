@@ -29,10 +29,12 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: 'web/pnpm-lock.yaml'
 
+      - name: Enable pnpm
+        run: corepack enable
+
       - name: Install dependencies
         run: |
           cd web
-          corepack enable
           pnpm install --frozen-lockfile
 
       - name: Run ESLint

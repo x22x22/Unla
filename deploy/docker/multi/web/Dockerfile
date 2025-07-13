@@ -21,7 +21,7 @@ WORKDIR /app/web
 COPY web/package*.json ./
 COPY web/pnpm-lock.yaml ./
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@9.15.0
 RUN pnpm install --frozen-lockfile
 
 COPY web/ .

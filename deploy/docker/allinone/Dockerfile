@@ -20,7 +20,7 @@ WORKDIR /app/web
 COPY web/package*.json ./
 COPY web/pnpm-lock.yaml ./
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@9.15.0
 RUN pnpm install --frozen-lockfile
 
 COPY web/ .
@@ -40,7 +40,7 @@ ENV PIP_INDEX_URL=${PIP_INDEX_URL} \
 # Configure pip and pnpm to use the specified repositories
 RUN mkdir -p /root/.config/pip && \
     echo "[global]\nindex-url = \${PIP_INDEX_URL}" > /root/.config/pip/pip.conf && \
-    corepack enable && corepack prepare pnpm@latest --activate && \
+    npm install -g pnpm@9.15.0 && \
     pnpm config set registry ${pnpm_config_registry} -g
 
 COPY deploy/docker/allinone/supervisord.conf /etc/supervisor/conf.d/
