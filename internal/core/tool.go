@@ -92,6 +92,9 @@ func (s *Server) prepareRequest(tool *config.ToolConfig, tmplCtx *template.Conte
 func processArguments(req *http.Request, tool *config.ToolConfig, args map[string]any) {
 	for _, arg := range tool.Args {
 		value := fmt.Sprint(args[arg.Name])
+		if value == "" || value == "<nil>" {
+			continue
+		}
 		switch strings.ToLower(arg.Position) {
 		case "header":
 			req.Header.Set(arg.Name, value)
