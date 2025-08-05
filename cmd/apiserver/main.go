@@ -228,6 +228,10 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 	runtimeConfigHandler := apiserverHandler.NewRuntimeConfigHandler(cfg)
 	r.GET("/api/runtime-config", runtimeConfigHandler.HandleRuntimeConfig)
 
+	// Public service info endpoint
+	serviceInfoHandler := apiserverHandler.NewServiceInfoHandler()
+	r.GET("/api/info", serviceInfoHandler.HandleServiceInfo)
+
 	r.Static("/web", "./web")
 	return r
 }
