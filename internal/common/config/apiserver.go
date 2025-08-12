@@ -17,6 +17,7 @@ type (
 		SuperAdmin SuperAdminConfig `yaml:"super_admin"`
 		I18n       I18nConfig       `yaml:"i18n"`
 		Web        WebConfig        `yaml:"web"`
+		Auth       AuthConfig       `yaml:"auth"`
 	}
 
 	// I18nConfig represents the internationalization configuration

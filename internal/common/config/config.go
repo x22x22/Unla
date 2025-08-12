@@ -87,6 +87,8 @@ type (
 	AuthConfig struct {
 		OAuth2 *OAuth2Config `yaml:"oauth2"`
 		CORS   *CORSConfig   `yaml:"cors,omitempty"`
+		Google *GoogleOAuthConfig `yaml:"google,omitempty"`
+		GitHub *GitHubOAuthConfig `yaml:"github,omitempty"`
 	}
 	OAuth2Config struct {
 		Issuer  string              `yaml:"issuer"`
@@ -103,6 +105,20 @@ type (
 		Username    string `yaml:"username"`
 		Password    string `yaml:"password"`
 		DB          int    `yaml:"db"`
+	}
+
+	// GoogleOAuthConfig defines Google OAuth configuration
+	GoogleOAuthConfig struct {
+		ClientID     string `yaml:"client_id"`
+		ClientSecret string `yaml:"client_secret"`
+		RedirectURI  string `yaml:"redirect_uri"`
+	}
+
+	// GitHubOAuthConfig defines GitHub OAuth configuration
+	GitHubOAuthConfig struct {
+		ClientID     string `yaml:"client_id"`
+		ClientSecret string `yaml:"client_secret"`
+		RedirectURI  string `yaml:"redirect_uri"`
 	}
 )
 

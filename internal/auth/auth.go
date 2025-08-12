@@ -15,6 +15,10 @@ type Auth interface {
 	OAuth2
 	IsOAuth2Enabled() bool
 	GetOAuth2CORS() *config.CORSConfig
+	GetGoogleOAuth() ExternalOAuth
+	GetGitHubOAuth() ExternalOAuth
+	IsGoogleOAuthEnabled() bool
+	IsGitHubOAuthEnabled() bool
 }
 
 type OAuth2 interface {
@@ -66,6 +70,8 @@ type ClientRegistrationResponse struct {
 type auth struct {
 	OAuth2
 	cfg config.AuthConfig
+	googleOAuth *GoogleOAuth
+	githubOAuth *GitHubOAuth
 }
 
 // NewAuth creates a new auth oauth based on the configuration
@@ -79,6 +85,12 @@ func NewAuth(logger *zap.Logger, cfg config.AuthConfig) (Auth, error) {
 			return nil, err
 		}
 		a.OAuth2 = oauth2
+	}
+	if cfg.Google != nil {
+		a.googleOAuth = NewGoogleOAuth(logger, *cfg.Google)
+	}
+	if cfg.GitHub != nil {
+		a.githubOAuth = NewGitHubOAuth(logger, *cfg.GitHub)
 	}
 	return a, nil
 }
@@ -100,4 +112,26 @@ func (a *auth) ValidateToken(ctx context.Context, token string) error {
 	}
 
 	return a.OAuth2.ValidateToken(ctx, token)
+}
+
+// GetGoogleOAuth returns the Google OAuth provider
+func (a *auth) GetGoogleOAuth() ExternalOAuth {
+	return a.googleOAuth
+}
+
+// GetGitHubOAuth returns the GitHub OAuth provider
+func (a *auth) GetGitHubOAuth() ExternalOAuth {
+	return a.githubOAuth
+}
+
+// IsGoogleOAuthEnabled returns true if Google OAuth is enabled
+func (a *auth) IsGoogleOAuthEnabled() bool {
+	return a.cfg.Google != nil && a.googleOAuth != nil && 
+		   a.cfg.Google.ClientID != "" && a.cfg.Google.ClientSecret != ""
+}
+
+// IsGitHubOAuthEnabled returns true if GitHub OAuth is enabled
+func (a *auth) IsGitHubOAuthEnabled() bool {
+	return a.cfg.GitHub != nil && a.githubOAuth != nil &&
+		   a.cfg.GitHub.ClientID != "" && a.cfg.GitHub.ClientSecret != ""
 }

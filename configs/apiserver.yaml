@@ -84,3 +84,17 @@ web:
   debug_mode: ${DEBUG_MODE:false}
   enable_experimental: ${ENABLE_EXPERIMENTAL:false}
   llm_config_admin_only: ${LLM_CONFIG_ADMIN_ONLY:false}
+
+# Authentication configuration
+auth:
+  # Google OAuth configuration (optional)
+  google:
+    client_id: "${GOOGLE_OAUTH_CLIENT_ID:}"
+    client_secret: "${GOOGLE_OAUTH_CLIENT_SECRET:}"
+    redirect_uri: "${GOOGLE_OAUTH_REDIRECT_URI:http://localhost:5234/api/auth/oauth/google/callback}"
+  
+  # GitHub OAuth configuration (optional)
+  github:
+    client_id: "${GITHUB_OAUTH_CLIENT_ID:}"
+    client_secret: "${GITHUB_OAUTH_CLIENT_SECRET:}"
+    redirect_uri: "${GITHUB_OAUTH_REDIRECT_URI:http://localhost:5234/api/auth/oauth/github/callback}"

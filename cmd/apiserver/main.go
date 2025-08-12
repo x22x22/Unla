@@ -10,6 +10,7 @@ import (
 	"github.com/amoylab/unla/internal/apiserver/database"
 	apiserverHandler "github.com/amoylab/unla/internal/apiserver/handler"
 	"github.com/amoylab/unla/internal/apiserver/middleware"
+	"github.com/amoylab/unla/internal/auth"
 	"github.com/amoylab/unla/internal/auth/jwt"
 	"github.com/amoylab/unla/internal/common/cnst"
 	"github.com/amoylab/unla/internal/common/config"
@@ -149,10 +150,28 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 		SecretKey: cfg.JWT.SecretKey,
 		Duration:  cfg.JWT.Duration,
 	})
+	
+	// Initialize OAuth auth service
+	authService, err := auth.NewAuth(logger, cfg.Auth)
+	if err != nil {
+		logger.Fatal("Failed to initialize auth service", zap.Error(err))
+	}
+	
 	authH := apiserverHandler.NewHandler(db, jwtService, mcpCfg, logger)
+	oauthH := apiserverHandler.NewOAuthHandler(db, jwtService, authService, logger)
 
 	authG := r.Group("/api/auth")
 	authG.POST("/login", authH.Login)
+	
+	// OAuth routes
+	oauthG := authG.Group("/oauth")
+	{
+		oauthG.GET("/providers", oauthH.GetOAuthProviders)
+		oauthG.GET("/google/login", oauthH.GoogleLogin)
+		oauthG.GET("/google/callback", oauthH.GoogleCallback)
+		oauthG.GET("/github/login", oauthH.GitHubLogin)
+		oauthG.GET("/github/callback", oauthH.GitHubCallback)
+	}
 
 	// Protected routes
 	protected := r.Group("/api")

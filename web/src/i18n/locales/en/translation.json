@@ -118,7 +118,11 @@
     "login_success": "Login successful",
     "login_failed": "Login failed, please try again",
     "logout_success": "Logout successful",
-    "session_expired": "Session expired, please login again"
+    "session_expired": "Session expired, please login again",
+    "or_continue_with": "or continue with",
+    "continue_with_google": "Continue with Google",
+    "continue_with_github": "Continue with GitHub",
+    "oauth_login_failed": "OAuth login failed"
   },
   "gateway": {
     "title": "Gateway Manager",

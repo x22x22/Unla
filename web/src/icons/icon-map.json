@@ -60,5 +60,7 @@
   "heroicons:arrow-uturn-left": "/icons/heroicons-arrow-uturn-left.svg",
   "heroicons:chevron-left": "/icons/heroicons-chevron-left.svg",
   "heroicons:chevron-right": "/icons/heroicons-chevron-right.svg",
-  "fluent-mdl2:chevron-fold-10": "/icons/fluent-mdl2-chevron-fold-10.svg"
+  "fluent-mdl2:chevron-fold-10": "/icons/fluent-mdl2-chevron-fold-10.svg",
+  "simple-icons:google": "/icons/simple-icons-google.svg",
+  "simple-icons:github": "/icons/simple-icons-github.svg"
 }
