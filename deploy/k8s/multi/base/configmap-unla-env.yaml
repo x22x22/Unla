@@ -22,7 +22,6 @@ data:
     GATEWAY_DB_PASSWORD: "unla"
     GATEWAY_DB_NAME: "unla"
     GATEWAY_DB_SSL_MODE: "disable"
-    GATEWAY_STORAGE_DISK_PATH: ""
 
     # Notifier Configuration
     APISERVER_NOTIFIER_ROLE: "sender"

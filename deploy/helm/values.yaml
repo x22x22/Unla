@@ -231,7 +231,6 @@ postgres:
     POSTGRES_DB: mcp-gateway
     POSTGRES_PASSWORD: postgres
     SSL_MODE: disable
-    GATEWAY_STORAGE_DISK_PATH: ""
     TZ: UTC
   resources:
     limits:

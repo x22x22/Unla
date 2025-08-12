@@ -4,15 +4,10 @@ import "time"
 
 type (
 	StorageConfig struct {
-		Type                 string            `yaml:"type"`                   // disk or db
-		RevisionHistoryLimit int               `yaml:"revision_history_limit"` // number of versions to keep
-		Database             DatabaseConfig    `yaml:"database"`               // database configuration for db type
-		Disk                 DiskStorageConfig `yaml:"disk"`                   // disk configuration for disk type
-		API                  APIStorageConfig  `yaml:"api"`                    // disk configuration for api type
-	}
-
-	DiskStorageConfig struct {
-		Path string `yaml:"path"` // path for disk storage
+		Type                 string           `yaml:"type"`                   // db or api
+		RevisionHistoryLimit int              `yaml:"revision_history_limit"` // number of versions to keep
+		Database             DatabaseConfig   `yaml:"database"`               // database configuration for db type
+		API                  APIStorageConfig `yaml:"api"`                    // api configuration for api type
 	}
 
 	APIStorageConfig struct {

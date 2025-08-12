@@ -12,8 +12,6 @@ import (
 func NewStore(logger *zap.Logger, cfg *config.StorageConfig) (Store, error) {
 	logger.Info("Initializing storage", zap.String("type", cfg.Type))
 	switch cfg.Type {
-	case "disk":
-		return NewDiskStore(logger, cfg)
 	case "db":
 		return NewDBStore(logger, cfg)
 	case "api":
