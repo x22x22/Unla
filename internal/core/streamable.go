@@ -206,7 +206,10 @@ func (s *Server) handleMCPRequest(c *gin.Context, req mcp.JSONRPCRequest, conn s
 	case mcp.NotificationInitialized:
 		c.Status(http.StatusAccepted)
 		return
-
+	case mcp.Ping:
+		// Handle ping request with an empty response
+		s.sendSuccessResponse(c, conn, req, struct{}{}, false)
+		return
 	case mcp.ToolsList:
 		protoType := s.state.GetProtoType(conn.Meta().Prefix)
 		if protoType == "" {
