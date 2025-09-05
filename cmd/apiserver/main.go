@@ -225,8 +225,19 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 			mcpGroup.DELETE("/configs/:tenant/:name", mcpHandler.HandleMCPServerDelete)
 			mcpGroup.POST("/configs/sync", mcpHandler.HandleMCPServerSync)
 			
-			// Capabilities endpoint
+			// Capabilities endpoints
 			mcpGroup.GET("/capabilities/:tenant/:name", mcpHandler.HandleGetCapabilities)
+			mcpGroup.POST("/capabilities/:tenant/:name/sync", mcpHandler.HandleSyncCapabilities)
+			mcpGroup.GET("/capabilities/:tenant/:name/sync/:syncId", mcpHandler.HandleGetSyncStatus)
+			mcpGroup.GET("/capabilities/:tenant/:name/sync", mcpHandler.HandleGetSyncHistory)
+			
+			// Tool status control endpoints
+			mcpGroup.PUT("/capabilities/:tenant/:name/tools/:toolName/status", mcpHandler.HandleUpdateToolStatus)
+			mcpGroup.PUT("/capabilities/:tenant/:name/tools/status", mcpHandler.HandleBatchUpdateToolStatus)
+			mcpGroup.GET("/capabilities/:tenant/:name/tools/:toolName/status/history", mcpHandler.HandleGetToolStatusHistory)
+			
+			// Statistics endpoints
+			mcpGroup.GET("/capabilities/:tenant/:name/stats", mcpHandler.HandleGetCapabilitiesStats)
 		}
 
 		// OpenAPI routes

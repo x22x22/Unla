@@ -278,7 +278,44 @@ func (t *StdioTransport) CallTool(ctx context.Context, params mcp.CallToolParams
 
 // FetchPrompts returns all prompts
 func (t *StdioTransport) FetchPrompts(ctx context.Context) ([]mcp.PromptSchema, error) {
-	return []mcp.PromptSchema{}, nil
+	if !t.IsRunning() {
+		if err := t.Start(ctx, template.NewContext()); err != nil {
+			return nil, err
+		}
+	}
+	defer func() {
+		if t.cfg.Policy == cnst.PolicyOnDemand {
+			_ = t.Stop(ctx)
+		}
+	}()
+
+	// List available prompts
+	promptsResult, err := t.client.ListPrompts(ctx, mcpgo.ListPromptsRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list prompts: %w", err)
+	}
+
+	// Convert from mcpgo.Prompt to mcp.PromptSchema
+	prompts := make([]mcp.PromptSchema, len(promptsResult.Prompts))
+	for i, prompt := range promptsResult.Prompts {
+		// Convert arguments
+		arguments := make([]mcp.PromptArgumentSchema, len(prompt.Arguments))
+		for j, arg := range prompt.Arguments {
+			arguments[j] = mcp.PromptArgumentSchema{
+				Name:        arg.Name,
+				Description: arg.Description,
+				Required:    arg.Required,
+			}
+		}
+
+		prompts[i] = mcp.PromptSchema{
+			Name:        prompt.Name,
+			Description: prompt.Description,
+			Arguments:   arguments,
+		}
+	}
+
+	return prompts, nil
 }
 
 // FetchPrompt returns a specific prompt by name
@@ -287,4 +324,77 @@ func (t *StdioTransport) FetchPrompt(ctx context.Context, name string) (*mcp.Pro
 		StatusCode: http.StatusNotFound,
 		Message:    "Prompt not found",
 	}
+}
+
+// FetchResources fetches the list of available resources
+func (t *StdioTransport) FetchResources(ctx context.Context) ([]mcp.ResourceSchema, error) {
+	if !t.IsRunning() {
+		if err := t.Start(ctx, template.NewContext()); err != nil {
+			return nil, err
+		}
+	}
+	defer func() {
+		if t.cfg.Policy == cnst.PolicyOnDemand {
+			_ = t.Stop(ctx)
+		}
+	}()
+
+	// List available resources
+	resourcesResult, err := t.client.ListResources(ctx, mcpgo.ListResourcesRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list resources: %w", err)
+	}
+
+	// Convert from mcpgo.Resource to mcp.ResourceSchema
+	resources := make([]mcp.ResourceSchema, len(resourcesResult.Resources))
+	for i, resource := range resourcesResult.Resources {
+		resources[i] = mcp.ResourceSchema{
+			Name:        resource.Name,
+			Description: resource.Description,
+			URI:         resource.URI,
+			MIMEType:    resource.MIMEType,
+		}
+	}
+
+	return resources, nil
+}
+
+// FetchResourceTemplates fetches the list of available resource templates
+func (t *StdioTransport) FetchResourceTemplates(ctx context.Context) ([]mcp.ResourceTemplateSchema, error) {
+	if !t.IsRunning() {
+		if err := t.Start(ctx, template.NewContext()); err != nil {
+			return nil, err
+		}
+	}
+	defer func() {
+		if t.cfg.Policy == cnst.PolicyOnDemand {
+			_ = t.Stop(ctx)
+		}
+	}()
+
+	// List available resource templates
+	resourceTemplatesResult, err := t.client.ListResourceTemplates(ctx, mcpgo.ListResourceTemplatesRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list resource templates: %w", err)
+	}
+
+	// Convert from mcpgo.ResourceTemplate to mcp.ResourceTemplateSchema
+	templates := make([]mcp.ResourceTemplateSchema, len(resourceTemplatesResult.ResourceTemplates))
+	for i, template := range resourceTemplatesResult.ResourceTemplates {
+		// Extract URI template string from the mcpgo.ResourceTemplate
+		uriTemplateString := ""
+		if template.URITemplate != nil {
+			uriTemplateString = template.URITemplate.Raw()
+		}
+
+		templates[i] = mcp.ResourceTemplateSchema{
+			URITemplate: uriTemplateString,
+			Name:        template.Name,
+			Description: template.Description,
+			MIMEType:    template.MIMEType,
+			// Parameters will be parsed from URI template if needed in the future
+		}
+	}
+
+	return templates, nil
 }

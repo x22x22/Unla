@@ -9,6 +9,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/ifuryst/lol v1.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
@@ -25,6 +26,8 @@ require (
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.12
 )
+
+require github.com/stretchr/objx v0.5.2 // indirect
 
 require (
 	github.com/bytedance/sonic v1.13.2 // indirect

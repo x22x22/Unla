@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/amoylab/unla/internal/common/config"
+	"github.com/amoylab/unla/internal/mcp/storage"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -31,6 +32,18 @@ func NewPostgres(cfg *config.DatabaseConfig) (Database, error) {
 	// Add SystemPrompt to migrations
 	if err := gormDB.AutoMigrate(&Message{}, &Session{}, &User{}, &Tenant{}, &UserTenant{}, &SystemPrompt{}); err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	// Add MCP capability models to migrations
+	if err := gormDB.AutoMigrate(
+		&storage.MCPToolModel{},
+		&storage.MCPPromptModel{},
+		&storage.MCPResourceModel{},
+		&storage.MCPResourceTemplateModel{},
+		&storage.SyncHistoryModel{},
+		&storage.ToolStatusHistoryModel{},
+	); err != nil {
+		return nil, fmt.Errorf("failed to migrate MCP capability tables: %w", err)
 	}
 
 	db.db = gormDB
@@ -143,6 +156,16 @@ func (db *Postgres) GetUserByUsername(ctx context.Context, username string) (*Us
 	err := db.db.WithContext(ctx).
 		Where("username = ?", username).
 		First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetUserByID retrieves a user by ID
+func (db *Postgres) GetUserByID(ctx context.Context, id uint) (*User, error) {
+	var user User
+	err := db.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

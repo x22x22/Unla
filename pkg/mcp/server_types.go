@@ -241,6 +241,19 @@ type (
 		Data any `json:"data,omitempty"`
 	}
 
+	// ResourceSchema and related types
+	ResourceSchema struct {
+		Name        string `json:"name"`
+		Description string `json:"description,omitempty"`
+		URI         string `json:"uri"`
+		MIMEType    string `json:"mimeType,omitempty"`
+	}
+
+	// ListResourcesResult represents the result of a resources/list request
+	ListResourcesResult struct {
+		Resources []ResourceSchema `json:"resources"`
+	}
+
 	// PromptSchema and related types
 
 	PromptSchema struct {
@@ -264,6 +277,113 @@ type (
 	PromptResponseContentSchema struct {
 		Type string `json:"type" yaml:"type"`
 		Text string `json:"text" yaml:"text"`
+	}
+
+	// ResourceTemplateSchema represents a resource template definition
+	ResourceTemplateSchema struct {
+		// A URI template (according to RFC 6570) that can be used to construct resource URIs
+		URITemplate string `json:"uriTemplate"`
+		// A human-readable name for the type of resource this template refers to
+		Name string `json:"name"`
+		// A description of what this template is for
+		Description string `json:"description,omitempty"`
+		// The MIME type for all resources that match this template
+		MIMEType string `json:"mimeType,omitempty"`
+		// Parameters that can be used in the URI template
+		Parameters []ResourceTemplateParameterSchema `json:"parameters,omitempty"`
+	}
+
+	// ResourceTemplateParameterSchema represents a parameter for a resource template
+	ResourceTemplateParameterSchema struct {
+		// The name of the parameter
+		Name string `json:"name"`
+		// A description of what this parameter represents
+		Description string `json:"description,omitempty"`
+		// Whether this parameter is required
+		Required bool `json:"required,omitempty"`
+		// The type of the parameter (string, number, boolean, etc.)
+		Type string `json:"type,omitempty"`
+	}
+
+	// ListResourceTemplatesResult represents the result of a resources/templates/list request
+	ListResourceTemplatesResult struct {
+		ResourceTemplates []ResourceTemplateSchema `json:"resourceTemplates"`
+	}
+
+	// MCPTool represents a tool with additional metadata for management
+	MCPTool struct {
+		// The name of the tool
+		Name string `json:"name" yaml:"name"`
+		// A human-readable description of the tool
+		Description string `json:"description" yaml:"description"`
+		// A JSON Schema object defining the expected parameters for the tool
+		InputSchema ToolInputSchema `json:"inputSchema" yaml:"inputSchema"`
+		// Annotations for the tool
+		Annotations *ToolAnnotations `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+		// Whether the tool is enabled for execution
+		Enabled bool `json:"enabled" yaml:"enabled"`
+		// Last time the tool information was synchronized
+		LastSynced string `json:"lastSynced,omitempty" yaml:"lastSynced,omitempty"`
+	}
+
+	// MCPPrompt represents a prompt template with additional metadata for management
+	MCPPrompt struct {
+		// The name of the prompt
+		Name string `json:"name" yaml:"name"`
+		// A human-readable description of the prompt
+		Description string `json:"description" yaml:"description"`
+		// Arguments that can be passed to the prompt
+		Arguments []PromptArgumentSchema `json:"arguments" yaml:"arguments"`
+		// Sample prompt responses (optional)
+		PromptResponse []PromptResponseSchema `json:"promptResponse,omitempty" yaml:"promptResponse,omitempty"`
+		// Last time the prompt information was synchronized
+		LastSynced string `json:"lastSynced,omitempty" yaml:"lastSynced,omitempty"`
+	}
+
+	// MCPResource represents a resource with additional metadata for management
+	MCPResource struct {
+		// The URI of this resource
+		URI string `json:"uri" yaml:"uri"`
+		// A human-readable name for this resource
+		Name string `json:"name" yaml:"name"`
+		// A description of what this resource represents
+		Description string `json:"description,omitempty" yaml:"description,omitempty"`
+		// The MIME type of this resource, if known
+		MIMEType string `json:"mimeType,omitempty" yaml:"mimeType,omitempty"`
+		// Last time the resource information was synchronized
+		LastSynced string `json:"lastSynced,omitempty" yaml:"lastSynced,omitempty"`
+	}
+
+	// MCPResourceTemplate represents a resource template with additional metadata for management
+	MCPResourceTemplate struct {
+		// A URI template that can be used to construct resource URIs
+		URITemplate string `json:"uriTemplate" yaml:"uriTemplate"`
+		// A human-readable name for the type of resource this template refers to
+		Name string `json:"name" yaml:"name"`
+		// A description of what this template is for
+		Description string `json:"description,omitempty" yaml:"description,omitempty"`
+		// The MIME type for all resources that match this template
+		MIMEType string `json:"mimeType,omitempty" yaml:"mimeType,omitempty"`
+		// Parameters that can be used in the URI template
+		Parameters []ResourceTemplateParameterSchema `json:"parameters,omitempty" yaml:"parameters,omitempty"`
+		// Last time the resource template information was synchronized
+		LastSynced string `json:"lastSynced,omitempty" yaml:"lastSynced,omitempty"`
+	}
+
+	// CapabilitiesInfo aggregates all MCP capability types
+	CapabilitiesInfo struct {
+		// Available tools
+		Tools []MCPTool `json:"tools" yaml:"tools"`
+		// Available prompts
+		Prompts []MCPPrompt `json:"prompts" yaml:"prompts"`
+		// Available resources
+		Resources []MCPResource `json:"resources" yaml:"resources"`
+		// Available resource templates
+		ResourceTemplates []MCPResourceTemplate `json:"resourceTemplates" yaml:"resourceTemplates"`
+		// Last time any capability was synchronized
+		LastSynced string `json:"lastSynced,omitempty" yaml:"lastSynced,omitempty"`
+		// Server information
+		ServerInfo map[string]interface{} `json:"serverInfo,omitempty" yaml:"serverInfo,omitempty"`
 	}
 )
 
