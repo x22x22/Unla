@@ -275,6 +275,9 @@ other = "MCP服务状态更新成功"
 [SuccessMCPConfigVersions]
 other = "MCP配置版本获取成功"
 
+[SuccessMCPCapabilities]
+other = "MCP能力信息获取成功"
+
 # OpenAPI related success messages
 [SuccessOpenAPIImported]
 other = "OpenAPI规范导入成功"
