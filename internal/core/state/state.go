@@ -19,26 +19,14 @@ type (
 	uriPrefix string
 	toolName  string
 	promptName  string
-	capabilitiesKey string
 
 	// State contains all the read-only shared state
 	State struct {
-		rawConfigs []*config.MCPConfig
-		runtime    map[uriPrefix]runtimeUnit
-		metrics    metrics
-		// Capabilities cache with TTL and LRU support, keyed by tenant+server
-		capabilities *atomic.Pointer[map[capabilitiesKey]*CapabilitiesEntry]
-		version      *atomic.Int64
-	}
-
-	// CapabilitiesEntry represents a cached capabilities info with metadata
-	CapabilitiesEntry struct {
-		Info        *mcp.CapabilitiesInfo `json:"info"`
-		ExpiresAt   time.Time             `json:"expiresAt"`
-		LastSynced  time.Time             `json:"lastSynced"`
-		Version     int64                 `json:"version"`
-		AccessCount int64                 `json:"accessCount"`
-		Errors      []string              `json:"errors,omitempty"`
+		rawConfigs   []*config.MCPConfig
+		runtime      map[uriPrefix]runtimeUnit
+		metrics      metrics
+		capabilities atomic.Pointer[map[capabilitiesKey]*CapabilitiesEntry]
+		version      atomic.Int64
 	}
 
 	runtimeUnit struct {
@@ -66,18 +54,10 @@ type (
 )
 
 func NewState() *State {
-	capabilities := &atomic.Pointer[map[capabilitiesKey]*CapabilitiesEntry]{}
-	capabilities.Store(&map[capabilitiesKey]*CapabilitiesEntry{})
-	
-	version := &atomic.Int64{}
-	version.Store(0)
-	
 	return &State{
-		rawConfigs:   make([]*config.MCPConfig, 0),
-		runtime:      make(map[uriPrefix]runtimeUnit),
-		metrics:      metrics{},
-		capabilities: capabilities,
-		version:      version,
+		rawConfigs: make([]*config.MCPConfig, 0),
+		runtime:    make(map[uriPrefix]runtimeUnit),
+		metrics:    metrics{},
 	}
 }
 
@@ -86,12 +66,6 @@ func BuildStateFromConfig(ctx context.Context, cfgs []*config.MCPConfig, oldStat
 	// Create new state
 	newState := NewState()
 	newState.rawConfigs = cfgs
-	
-	// Preserve capabilities from old state if available
-	if oldState != nil && oldState.capabilities != nil {
-		newState.capabilities = oldState.capabilities
-		newState.version = oldState.version
-	}
 
 	for _, cfg := range cfgs {
 		toolMap := make(map[toolName]*config.ToolConfig)

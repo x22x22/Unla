@@ -215,28 +215,24 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 		// MCP config routes
 		mcpGroup := protected.Group("/mcp")
 		{
-			mcpGroup.GET("/configs/names", mcpHandler.HandleGetConfigNames)
-			mcpGroup.GET("/configs/versions", mcpHandler.HandleGetConfigVersions)
-			mcpGroup.POST("/configs/:tenant/:name/versions/:version/active", mcpHandler.HandleSetActiveVersion)
-
+			// Core endpoints needed by frontend
 			mcpGroup.GET("/configs", mcpHandler.HandleListMCPServers)
 			mcpGroup.POST("/configs", mcpHandler.HandleMCPServerCreate)
-			mcpGroup.PUT("/configs", mcpHandler.HandleMCPServerUpdate)
-			mcpGroup.DELETE("/configs/:tenant/:name", mcpHandler.HandleMCPServerDelete)
-			mcpGroup.POST("/configs/sync", mcpHandler.HandleMCPServerSync)
-			
-			// Capabilities endpoints
 			mcpGroup.GET("/capabilities/:tenant/:name", mcpHandler.HandleGetCapabilities)
-			mcpGroup.POST("/capabilities/:tenant/:name/sync", mcpHandler.HandleSyncCapabilities)
-			mcpGroup.GET("/capabilities/:tenant/:name/sync/:syncId", mcpHandler.HandleGetSyncStatus)
-			mcpGroup.GET("/capabilities/:tenant/:name/sync", mcpHandler.HandleGetSyncHistory)
 			
-			// Tool status control endpoints
-			mcpGroup.PUT("/capabilities/:tenant/:name/tools/:toolName/status", mcpHandler.HandleUpdateToolStatus)
-			mcpGroup.PUT("/capabilities/:tenant/:name/tools/status", mcpHandler.HandleBatchUpdateToolStatus)
-			mcpGroup.GET("/capabilities/:tenant/:name/tools/:toolName/status/history", mcpHandler.HandleGetToolStatusHistory)
-			
-			// Statistics endpoints
+			// Other endpoints commented out to avoid dependencies on deleted components
+			// mcpGroup.GET("/configs/names", mcpHandler.HandleGetConfigNames)
+			// mcpGroup.GET("/configs/versions", mcpHandler.HandleGetConfigVersions)
+			// mcpGroup.POST("/configs/:tenant/:name/versions/:version/active", mcpHandler.HandleSetActiveVersion)
+			// mcpGroup.PUT("/configs", mcpHandler.HandleMCPServerUpdate)
+			// mcpGroup.DELETE("/configs/:tenant/:name", mcpHandler.HandleMCPServerDelete)
+			// mcpGroup.POST("/configs/sync", mcpHandler.HandleMCPServerSync)
+			// mcpGroup.POST("/capabilities/:tenant/:name/sync", mcpHandler.HandleSyncCapabilities)
+			// mcpGroup.GET("/capabilities/:tenant/:name/sync/:syncId", mcpHandler.HandleGetSyncStatus)
+			// mcpGroup.GET("/capabilities/:tenant/:name/sync", mcpHandler.HandleGetSyncHistory)
+			// mcpGroup.PUT("/capabilities/:tenant/:name/tools/:toolName/status", mcpHandler.HandleUpdateToolStatus)
+			// mcpGroup.PUT("/capabilities/:tenant/:name/tools/status", mcpHandler.HandleBatchUpdateToolStatus)
+			// mcpGroup.GET("/capabilities/:tenant/:name/tools/:toolName/status/history", mcpHandler.HandleGetToolStatusHistory)
 			mcpGroup.GET("/capabilities/:tenant/:name/stats", mcpHandler.HandleGetCapabilitiesStats)
 		}
 

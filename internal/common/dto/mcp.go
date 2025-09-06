@@ -373,21 +373,11 @@ func FromMCPGoTool(tool mcpgo.Tool) mcp.MCPTool {
 		Title:      tool.Name,
 	}
 
-	// Convert annotations if available
-	var annotations *mcp.ToolAnnotations
-	if tool.Annotations.Title != "" {
-		annotations = &mcp.ToolAnnotations{
-			Title: tool.Annotations.Title,
-		}
-	}
 
 	return mcp.MCPTool{
 		Name:        tool.Name,
 		Description: tool.Description,
 		InputSchema: inputSchema,
-		Annotations: annotations,
-		Enabled:     true,                    // Default to enabled
-		LastSynced:  time.Now().UTC().String(), // Set current time
 	}
 }
 
@@ -407,18 +397,16 @@ func FromMCPGoPrompt(prompt mcpgo.Prompt) mcp.MCPPrompt {
 		Name:        prompt.Name,
 		Description: prompt.Description,
 		Arguments:   arguments,
-		LastSynced:  time.Now().UTC().String(),
 	}
 }
 
 // FromMCPGoResource converts mcpgo.Resource to mcp.MCPResource
 func FromMCPGoResource(resource mcpgo.Resource) mcp.MCPResource {
 	return mcp.MCPResource{
-		URI:         resource.URI,
+		Uri:         resource.URI,
 		Name:        resource.Name,
 		Description: resource.Description,
-		MIMEType:    resource.MIMEType,
-		LastSynced:  time.Now().UTC().String(),
+		MimeType:    resource.MIMEType,
 	}
 }
 
@@ -431,11 +419,10 @@ func FromMCPGoResourceTemplate(template mcpgo.ResourceTemplate) mcp.MCPResourceT
 	}
 
 	return mcp.MCPResourceTemplate{
-		URITemplate: uriTemplateString,
+		UriTemplate: uriTemplateString,
 		Name:        template.Name,
 		Description: template.Description,
-		MIMEType:    template.MIMEType,
-		LastSynced:  time.Now().UTC().String(),
+		MimeType:    template.MIMEType,
 	}
 }
 

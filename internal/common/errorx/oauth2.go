@@ -74,7 +74,7 @@ var (
 		HTTPStatus: http.StatusBadRequest,
 	}
 
-	ErrOAuth2TokenExpired = &OAuth2Error{
+	ErrTokenExpired = &OAuth2Error{
 		ErrorType:  "invalid_token",
 		ErrorCode:  "token_expired",
 		HTTPStatus: http.StatusBadRequest,

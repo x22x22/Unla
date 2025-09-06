@@ -45,9 +45,9 @@ function MainLayout() {
         <Route path="/" element={<GatewayManager />} />
         <Route path="/chat" element={<LLMChatInterface />} />
         <Route path="/chat/:sessionId" element={<LLMChatInterface />} />
+        <Route path="/gateway/capabilities/:tenant/:serverName" element={<PrivateRoute><CapabilitiesPage /></PrivateRoute>} />
         <Route path="/gateway/*" element={<GatewayManager />} />
         <Route path="/gateway" element={<PrivateRoute><GatewayManager /></PrivateRoute>} />
-        <Route path="/gateway/capabilities/:tenant/:serverName" element={<PrivateRoute><CapabilitiesPage /></PrivateRoute>} />
         <Route path="/gateway/configs/:name/versions" element={<PrivateRoute><ConfigVersionsPage /></PrivateRoute>} />
         <Route path="/config-versions" element={<PrivateRoute><ConfigVersionsPage /></PrivateRoute>} />
         <Route path="/llm" element={<PrivateRoute><LLMSettings /></PrivateRoute>} />

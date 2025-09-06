@@ -16,6 +16,27 @@ const (
 	MaxCapabilitiesEntries = 1000
 )
 
+// capabilitiesKey represents a unique key for capabilities cache
+type capabilitiesKey struct {
+	tenant string
+	server string
+}
+
+// String returns string representation of the capabilities key
+func (k capabilitiesKey) String() string {
+	return k.tenant + ":" + k.server
+}
+
+// CapabilitiesEntry represents a cached capabilities entry with metadata
+type CapabilitiesEntry struct {
+	Info        *mcp.CapabilitiesInfo `json:"info"`
+	ExpiresAt   time.Time             `json:"expiresAt"`
+	LastSynced  time.Time             `json:"lastSynced"`
+	Version     int64                 `json:"version"`
+	AccessCount int64                 `json:"accessCount"`
+	Errors      []string              `json:"errors,omitempty"`
+}
+
 // SetCapabilities atomically updates or creates capabilities info for a tenant and server
 func (s *State) SetCapabilities(tenant, serverName string, info *mcp.CapabilitiesInfo) {
 	s.SetCapabilitiesWithTTL(tenant, serverName, info, DefaultCapabilitiesTTL)
@@ -140,7 +161,7 @@ func (s *State) RemoveCapabilitiesByTenant(tenant string) int {
 		
 		// Copy entries that don't belong to the tenant
 		for k, v := range *currentMap {
-			keyStr := string(k)
+			keyStr := k.String()
 			if len(keyStr) > len(tenantPrefix) && keyStr[:len(tenantPrefix)] == tenantPrefix {
 				removedCount++
 			} else {
@@ -306,7 +327,7 @@ func (s *State) UpdateToolStatus(tenant, serverName, toolName string, enabled bo
 			Prompts:           info.Prompts,
 			Resources:         info.Resources,
 			ResourceTemplates: info.ResourceTemplates,
-			LastSynced:        time.Now().Format(time.RFC3339),
+			LastSynced:        time.Now(),
 			ServerInfo:        info.ServerInfo,
 		}
 		
@@ -315,8 +336,6 @@ func (s *State) UpdateToolStatus(tenant, serverName, toolName string, enabled bo
 		for i, tool := range info.Tools {
 			updatedInfo.Tools[i] = tool
 			if tool.Name == toolName {
-				updatedInfo.Tools[i].Enabled = enabled
-				updatedInfo.Tools[i].LastSynced = time.Now().Format(time.RFC3339)
 				found = true
 			}
 		}
@@ -338,7 +357,7 @@ func (s *State) AddTool(tenant, serverName string, tool mcp.MCPTool) bool {
 			Prompts:           info.Prompts,
 			Resources:         info.Resources,
 			ResourceTemplates: info.ResourceTemplates,
-			LastSynced:        time.Now().Format(time.RFC3339),
+			LastSynced:        time.Now(),
 			ServerInfo:        info.ServerInfo,
 		}
 		
@@ -372,7 +391,7 @@ func (s *State) RemoveTool(tenant, serverName, toolName string) bool {
 			Prompts:           info.Prompts,
 			Resources:         info.Resources,
 			ResourceTemplates: info.ResourceTemplates,
-			LastSynced:        time.Now().Format(time.RFC3339),
+			LastSynced:        time.Now(),
 			ServerInfo:        info.ServerInfo,
 		}
 		
@@ -403,7 +422,7 @@ func (s *State) UpdatePrompt(tenant, serverName string, prompt mcp.MCPPrompt) bo
 			Prompts:           make([]mcp.MCPPrompt, 0, len(info.Prompts)+1),
 			Resources:         info.Resources,
 			ResourceTemplates: info.ResourceTemplates,
-			LastSynced:        time.Now().Format(time.RFC3339),
+			LastSynced:        time.Now(),
 			ServerInfo:        info.ServerInfo,
 		}
 		
@@ -437,14 +456,14 @@ func (s *State) UpdateResource(tenant, serverName string, resource mcp.MCPResour
 			Prompts:           info.Prompts,
 			Resources:         make([]mcp.MCPResource, 0, len(info.Resources)+1),
 			ResourceTemplates: info.ResourceTemplates,
-			LastSynced:        time.Now().Format(time.RFC3339),
+			LastSynced:        time.Now(),
 			ServerInfo:        info.ServerInfo,
 		}
 		
 		// Copy existing resources and check for duplicates
 		found := false
 		for _, existingResource := range info.Resources {
-			if existingResource.URI == resource.URI {
+			if existingResource.Uri == resource.Uri {
 				// Update existing resource
 				updatedInfo.Resources = append(updatedInfo.Resources, resource)
 				found = true
@@ -472,7 +491,7 @@ func (s *State) CleanCapabilitiesForRemovedServers(activeServers map[string]bool
 		
 		// Copy entries for servers that are still active
 		for key, entry := range *currentMap {
-			keyStr := string(key)
+			keyStr := key.String()
 			// Extract server name from key (format: tenant:serverName)
 			if colonPos := strings.Index(keyStr, ":"); colonPos > 0 && colonPos < len(keyStr)-1 {
 				serverName := keyStr[colonPos+1:]
@@ -507,7 +526,7 @@ func (s *State) ValidateCapabilitiesConsistency() []string {
 	issues := make([]string, 0)
 	
 	for key, entry := range *capabilityMap {
-		keyStr := string(key)
+		keyStr := key.String()
 		
 		// Check key format
 		if !strings.Contains(keyStr, ":") {
@@ -533,4 +552,12 @@ func (s *State) ValidateCapabilitiesConsistency() []string {
 	}
 	
 	return issues
+}
+
+// makeCapabilitiesKey creates a cache key from tenant and server name
+func makeCapabilitiesKey(tenant, serverName string) capabilitiesKey {
+	return capabilitiesKey{
+		tenant: tenant,
+		server: serverName,
+	}
 }

@@ -1,7 +1,6 @@
 package state
 
 import (
-	"fmt"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -153,10 +152,6 @@ func (s *State) GetPromptSchemas(prefix string) []mcp.PromptSchema {
 	return runtime.promptSchemas
 }
 
-// makeCapabilitiesKey creates a key for the capabilities cache
-func makeCapabilitiesKey(tenant, serverName string) capabilitiesKey {
-	return capabilitiesKey(fmt.Sprintf("%s:%s", tenant, serverName))
-}
 
 // GetCapabilities retrieves capabilities info for a tenant and server in a thread-safe manner
 func (s *State) GetCapabilities(tenant, serverName string) *mcp.CapabilitiesInfo {
@@ -199,7 +194,7 @@ func (s *State) GetAllCapabilities(tenant string) map[string]*mcp.CapabilitiesIn
 	now := time.Now()
 	
 	for key, entry := range *capabilityMap {
-		keyStr := string(key)
+		keyStr := key.String()
 		// Check if this entry belongs to the specified tenant
 		if len(keyStr) > len(tenant)+1 && keyStr[:len(tenant)+1] == tenant+":" {
 			// Check if entry has expired
@@ -253,7 +248,7 @@ func (s *State) GetCapabilitiesStats() map[string]interface{} {
 	tenantCount := make(map[string]int)
 	
 	for key, entry := range *capabilityMap {
-		keyStr := string(key)
+		keyStr := key.String()
 		// Extract tenant from key
 		if colonPos := strings.Index(keyStr, ":"); colonPos > 0 {
 			tenant := keyStr[:colonPos]

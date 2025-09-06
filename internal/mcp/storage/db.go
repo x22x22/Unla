@@ -31,9 +31,6 @@ type DBStore struct {
 	logger *zap.Logger
 	db     *gorm.DB
 	cfg    *config.StorageConfig
-	
-	// Embedded capability store for MCP capability operations
-	*DBCapabilityStore
 }
 
 var _ Store = (*DBStore)(nil)
@@ -60,16 +57,14 @@ func NewDBStore(logger *zap.Logger, cfg *config.StorageConfig) (*DBStore, error)
 	}
 
 	// Auto migrate the schema
-	if err := db.AutoMigrate(&MCPConfig{}, &MCPConfigVersion{}, &ActiveVersion{}, 
-		&MCPToolModel{}, &MCPPromptModel{}, &MCPResourceModel{}, &MCPResourceTemplateModel{}, &SyncHistoryModel{}); err != nil {
+	if err := db.AutoMigrate(&MCPConfig{}, &MCPConfigVersion{}, &ActiveVersion{}); err != nil {
 		return nil, err
 	}
 
 	return &DBStore{
-		logger:             logger,
-		db:                 db,
-		cfg:                cfg,
-		DBCapabilityStore:  NewDBCapabilityStore(logger, db),
+		logger: logger,
+		db:     db,
+		cfg:    cfg,
 	}, nil
 }
 
