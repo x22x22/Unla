@@ -183,6 +183,8 @@ export function GatewayManager() {
     fetchMCPServers();
   }, [t, selectedTenant, tenants]);
 
+  // 延迟这个 useEffect，放到 fetchAllCapabilitiesStats 定义之后
+
   // Get user's authorized tenants
   React.useEffect(() => {
     const fetchAuthorizedTenants = async () => {
@@ -479,6 +481,8 @@ export function GatewayManager() {
     }, 1000);
   };
 
+
+
   return (
     <div className="container mx-auto p-4 pb-10 h-[calc(100vh-5rem)] flex flex-col overflow-y-scroll scrollbar-hide">
       <div className="flex justify-between items-center mb-4">
@@ -608,6 +612,19 @@ export function GatewayManager() {
                         color="primary"
                         variant="light"
                         size="sm"
+                        onPress={() => {
+                          navigate(`/gateway/capabilities/${encodeURIComponent(server.tenant || 'default')}/${encodeURIComponent(server.name)}`);
+                        }}
+                        aria-label={t('capabilities.view_capabilities')}
+                        isDisabled={isOpen || isCreateOpen || isImportOpen}
+                      >
+                        <LocalIcon icon="lucide:brain" className="text-lg" />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        color="primary"
+                        variant="light"
+                        size="sm"
                         onPress={() => handleEdit(server)}
                         aria-label={t('gateway.edit')}
                         isDisabled={isOpen || isCreateOpen || isImportOpen}
@@ -653,6 +670,7 @@ export function GatewayManager() {
 
                   {server && (
                     <div className="space-y-3">
+                      
                       {(server.servers || []).map((serverConfig) => {
                         const sc = serverConfig as ServerConfig;
                         return (
@@ -1108,6 +1126,18 @@ export function GatewayManager() {
                         color="primary"
                         variant="light"
                         size="sm"
+                        onPress={() => {
+                          navigate(`/gateway/capabilities/${encodeURIComponent(server.tenant || 'default')}/${encodeURIComponent(server.name)}`);
+                        }}
+                        aria-label={t('capabilities.view_capabilities')}
+                      >
+                        <LocalIcon icon="lucide:brain" className="text-lg" />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        color="primary"
+                        variant="light"
+                        size="sm"
                         onPress={() => handleEdit(server)}
                         aria-label={t('gateway.edit')}
                       >
@@ -1498,6 +1528,7 @@ export function GatewayManager() {
           )}
         </ModalContent>
       </Modal>
+
     </div>
   );
 }

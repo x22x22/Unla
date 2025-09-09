@@ -134,7 +134,7 @@ func initSuperAdmin(ctx context.Context, db database.Database, cfg *config.APISe
 }
 
 // initRouter initializes the HTTP router and handlers
-func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier, cfg *config.APIServerConfig, logger *zap.Logger) *gin.Engine {
+func initRouter(ctx context.Context, db database.Database, store storage.Store, ntf notifier.Notifier, cfg *config.APIServerConfig, logger *zap.Logger) *gin.Engine {
 	r := gin.Default()
 
 	// Convert APIServerConfig to MCPGatewayConfig
@@ -173,14 +173,15 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 		oauthG.GET("/github/callback", oauthH.GitHubCallback)
 	}
 
-	// Protected routes
-	protected := r.Group("/api")
-	protected.Use(middleware.JWTAuthMiddleware(jwtService))
-	{
-		chatHandler := apiserverHandler.NewChat(db, logger)
-		mcpHandler := apiserverHandler.NewMCP(db, store, ntf, logger)
-		openapiHandler := apiserverHandler.NewOpenAPI(db, store, ntf, logger)
-		systemPromptHandler := apiserverHandler.NewSystemPrompt(db, logger)
+    // Protected routes
+    var mcpHandler *apiserverHandler.MCP
+    protected := r.Group("/api")
+    protected.Use(middleware.JWTAuthMiddleware(jwtService))
+    {
+        chatHandler := apiserverHandler.NewChat(db, logger)
+        mcpHandler = apiserverHandler.NewMCP(db, store, ntf, logger)
+        openapiHandler := apiserverHandler.NewOpenAPI(db, store, ntf, logger)
+        systemPromptHandler := apiserverHandler.NewSystemPrompt(db, logger)
 
 		// Auth routes
 		protected.POST("/auth/change-password", authH.ChangePassword)
@@ -224,6 +225,10 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 			mcpGroup.PUT("/configs", mcpHandler.HandleMCPServerUpdate)
 			mcpGroup.DELETE("/configs/:tenant/:name", mcpHandler.HandleMCPServerDelete)
 			mcpGroup.POST("/configs/sync", mcpHandler.HandleMCPServerSync)
+			
+			// Capabilities endpoint
+			mcpGroup.GET("/capabilities/:tenant/:name", mcpHandler.HandleGetCapabilities)
+			
 		}
 
 		// OpenAPI routes
@@ -248,6 +253,11 @@ func initRouter(db database.Database, store storage.Store, ntf notifier.Notifier
 	r.GET("/api/runtime-config", runtimeConfigHandler.HandleRuntimeConfig)
 
 	r.Static("/web", "./web")
+
+    // Start background MCP capabilities refresh:
+    // - Immediate refresh on startup
+    // - Periodic refresh every 120s by default
+    mcpHandler.StartCapabilitiesSync(ctx)
 	return r
 }
 
@@ -305,7 +315,7 @@ func run() {
 	store := initStore(logger, &cfg.Storage)
 
 	// Initialize router and start server
-	router := initRouter(db, store, ntf, cfg, logger)
+	router := initRouter(ctx, db, store, ntf, cfg, logger)
 	startServer(logger, router)
 }
 
