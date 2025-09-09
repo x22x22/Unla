@@ -1171,14 +1171,14 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 			// Emit clear warnings to avoid silent failures and surface partial support
 			go func() {
 				defer serverWg.Done()
-				h.logger.Warn("resource fetching not implemented; skipping",
+				h.logger.Debug("resource fetching not implemented; skipping",
 					zap.String("server", serverCfg.Name))
 				// Push a non-fatal warning into the error channel for aggregation
 				errChan <- fmt.Errorf("resources fetching not implemented for server %s", serverCfg.Name)
 			}()
 			go func() {
 				defer serverWg.Done()
-				h.logger.Warn("resource template fetching not implemented; skipping",
+				h.logger.Debug("resource template fetching not implemented; skipping",
 					zap.String("server", serverCfg.Name))
 				// Push a non-fatal warning into the error channel for aggregation
 				errChan <- fmt.Errorf("resource templates fetching not implemented for server %s", serverCfg.Name)
@@ -1200,7 +1200,7 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 
 	// If there are errors but we got some capabilities, log warnings
 	if len(errors) > 0 {
-		h.logger.Warn("some capabilities could not be fetched",
+		h.logger.Debug("some capabilities could not be fetched",
 			zap.Int("error_count", len(errors)),
 			zap.Int("tools_fetched", len(capabilities.Tools)),
 			zap.Int("prompts_fetched", len(capabilities.Prompts)))
