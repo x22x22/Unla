@@ -753,7 +753,13 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
     selectedType: CapabilityType | 'all',
     advancedFilters: typeof advancedSearch
   ): MCPCapabilities => {
-    const filtered: MCPCapabilities = {};
+    // 初始化所有能力类型为空数组，避免 undefined
+    const filtered: MCPCapabilities = {
+      tools: [],
+      prompts: [],
+      resources: [],
+      resourceTemplates: []
+    };
 
     const matchesSearch = (item: {name: string, description?: string}) => {
       const searchIn = advancedFilters.searchInDescription ? 
