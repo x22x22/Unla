@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"encoding/json"
+	"time"
 )
 
 type (
@@ -265,6 +266,52 @@ type (
 		Type string `json:"type" yaml:"type"`
 		Text string `json:"text" yaml:"text"`
 	}
+
+	// CapabilitiesInfo represents the capabilities information for an MCP server
+	CapabilitiesInfo struct {
+		Tools             []MCPTool            `json:"tools"`
+		Prompts           []MCPPrompt          `json:"prompts"`
+		Resources         []MCPResource        `json:"resources"`
+		ResourceTemplates []MCPResourceTemplate `json:"resourceTemplates"`
+		LastSynced        time.Time            `json:"lastSynced"`
+		ServerInfo        ImplementationSchema `json:"serverInfo"`
+	}
+
+	// MCPTool represents a tool in MCP capabilities
+	MCPTool struct {
+		Name        string           `json:"name"`
+		Description string           `json:"description"`
+		InputSchema ToolInputSchema  `json:"inputSchema"`
+		Annotations *ToolAnnotations `json:"annotations,omitempty"`
+		Enabled     bool             `json:"enabled"`
+		LastSynced  time.Time        `json:"lastSynced"`
+	}
+
+	// MCPPrompt represents a prompt in MCP capabilities
+	MCPPrompt struct {
+		Name           string                 `json:"name"`
+		Description    string                 `json:"description"`
+		Arguments      []PromptArgumentSchema `json:"arguments"`
+		LastSynced     time.Time             `json:"lastSynced"`
+	}
+
+	// MCPResource represents a resource in MCP capabilities
+	MCPResource struct {
+		Uri         string    `json:"uri"`
+		Name        string    `json:"name"`
+		Description string    `json:"description"`
+		MimeType    string    `json:"mimeType"`
+		LastSynced  time.Time `json:"lastSynced"`
+	}
+
+	// MCPResourceTemplate represents a resource template in MCP capabilities
+	MCPResourceTemplate struct {
+		UriTemplate string    `json:"uriTemplate"`
+		Name        string    `json:"name"`
+		Description string    `json:"description"`
+		MimeType    string    `json:"mimeType"`
+		LastSynced  time.Time `json:"lastSynced"`
+	}
 )
 
 // NewInitializeRequest creates a new initialize request
@@ -365,7 +412,7 @@ func NewCallToolResultImage(imageData, mimeType string) *CallToolResult {
 func NewCallToolResultAudio(audioData, mimeType string) *CallToolResult {
 	return &CallToolResult{
 		Content: []Content{
-			&ImageContent{
+			&AudioContent{
 				Type:     AudioContentType,
 				Data:     audioData,
 				MimeType: mimeType,

@@ -38,4 +38,60 @@ export interface MCPConfigVersion {
 
 export interface MCPConfigVersionListResponse {
   data: MCPConfigVersion[];
-} 
+}
+
+// MCP Capabilities types
+export const PromptSchema = z.object({
+  name: z.string(),
+  description: z.optional(z.string()),
+  arguments: z.optional(z.array(z.object({
+    name: z.string(),
+    description: z.optional(z.string()),
+    required: z.optional(z.boolean())
+  })))
+}).passthrough();
+
+export type Prompt = z.infer<typeof PromptSchema>;
+
+export const ResourceSchema = z.object({
+  uri: z.string(),
+  name: z.string(),
+  description: z.optional(z.string()),
+  mimeType: z.optional(z.string())
+}).passthrough();
+
+export type Resource = z.infer<typeof ResourceSchema>;
+
+export const ResourceTemplateSchema = z.object({
+  uriTemplate: z.string(),
+  name: z.string(),
+  description: z.optional(z.string()),
+  mimeType: z.optional(z.string())
+}).passthrough();
+
+export type ResourceTemplate = z.infer<typeof ResourceTemplateSchema>;
+
+export interface MCPCapabilities {
+  tools?: Tool[];
+  prompts?: Prompt[];
+  resources?: Resource[];
+  resourceTemplates?: ResourceTemplate[];
+}
+
+export type CapabilityType = 'tools' | 'prompts' | 'resources' | 'resourceTemplates';
+
+export interface CapabilityItem {
+  name: string;
+  description?: string;
+  type: CapabilityType;
+  [key: string]: unknown;
+}
+
+export interface CapabilitiesState {
+  loading: boolean;
+  error: string | null;
+  data: MCPCapabilities | null;
+  filteredData: MCPCapabilities | null;
+  searchTerm: string;
+  selectedType: CapabilityType | 'all';
+}

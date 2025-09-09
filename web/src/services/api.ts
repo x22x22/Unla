@@ -599,4 +599,18 @@ export const saveChatMessage = async (message: {
   }
 };
 
+// MCP Server Capabilities API
+export const getMCPServerCapabilities = async (tenant: string, serverName: string) => {
+  try {
+    const response = await api.get(`/mcp/capabilities/${tenant}/${serverName}`);
+    return response.data.data || response.data;
+  } catch (error) {
+    handleApiError(error, 'errors.fetch_mcp_capabilities');
+    throw error;
+  }
+};
+
+
+// Tool Status Management APIs
+
 export default api;
