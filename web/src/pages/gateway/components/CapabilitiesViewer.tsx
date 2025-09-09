@@ -814,17 +814,13 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
         }
         
         // 服务名称筛选
-        if (advancedFilters.serverNameFilter) {
-          if (!serverName.toLowerCase().includes(advancedFilters.serverNameFilter.toLowerCase())) {
-            return false;
-          }
+        if (advancedFilters.serverNameFilter && !serverName.toLowerCase().includes(advancedFilters.serverNameFilter.toLowerCase())) {
+          return false;
         }
         
         // 租户筛选
-        if (advancedFilters.tenantFilter) {
-          if (!tenant.toLowerCase().includes(advancedFilters.tenantFilter.toLowerCase())) {
-            return false;
-          }
+        if (advancedFilters.tenantFilter && !tenant.toLowerCase().includes(advancedFilters.tenantFilter.toLowerCase())) {
+          return false;
         }
         
         return true;
