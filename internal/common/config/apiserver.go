@@ -8,17 +8,18 @@ import (
 )
 
 type (
-	APIServerConfig struct {
-		Database   DatabaseConfig   `yaml:"database"`
-		Storage    StorageConfig    `yaml:"storage"`
-		Notifier   NotifierConfig   `yaml:"notifier"`
-		Logger     LoggerConfig     `yaml:"logger"`
-		JWT        JWTConfig        `yaml:"jwt"`
-		SuperAdmin SuperAdminConfig `yaml:"super_admin"`
-		I18n       I18nConfig       `yaml:"i18n"`
-		Web        WebConfig        `yaml:"web"`
-		Auth       AuthConfig       `yaml:"auth"`
-	}
+    APIServerConfig struct {
+        Database   DatabaseConfig   `yaml:"database"`
+        Storage    StorageConfig    `yaml:"storage"`
+        Notifier   NotifierConfig   `yaml:"notifier"`
+        Logger     LoggerConfig     `yaml:"logger"`
+        JWT        JWTConfig        `yaml:"jwt"`
+        SuperAdmin SuperAdminConfig `yaml:"super_admin"`
+        I18n       I18nConfig       `yaml:"i18n"`
+        Web        WebConfig        `yaml:"web"`
+        Auth       AuthConfig       `yaml:"auth"`
+        MCP        MCPRuntimeConfig `yaml:"mcp"`
+    }
 
 	// I18nConfig represents the internationalization configuration
 	I18nConfig struct {
@@ -40,16 +41,24 @@ type (
 		Duration  time.Duration `yaml:"duration"`
 	}
 
-	WebConfig struct {
-		APIBaseURL               string `yaml:"api_base_url"`
-		WSBaseURL                string `yaml:"ws_base_url"`
-		MCPGatewayBaseURL        string `yaml:"mcp_gateway_base_url"`
-		DirectMCPGatewayModifier string `yaml:"direct_mcp_gateway_modifier"`
-		BaseURL                  string `yaml:"base_url"`
-		DebugMode                bool   `yaml:"debug_mode"`
-		EnableExperimental       bool   `yaml:"enable_experimental"`
-		LLMConfigAdminOnly       bool   `yaml:"llm_config_admin_only"`
-	}
+    WebConfig struct {
+        APIBaseURL               string `yaml:"api_base_url"`
+        WSBaseURL                string `yaml:"ws_base_url"`
+        MCPGatewayBaseURL        string `yaml:"mcp_gateway_base_url"`
+        DirectMCPGatewayModifier string `yaml:"direct_mcp_gateway_modifier"`
+        BaseURL                  string `yaml:"base_url"`
+        DebugMode                bool   `yaml:"debug_mode"`
+        EnableExperimental       bool   `yaml:"enable_experimental"`
+        LLMConfigAdminOnly       bool   `yaml:"llm_config_admin_only"`
+    }
+
+    // MCPRuntimeConfig controls MCP capabilities sync/cache behavior in apiserver
+    MCPRuntimeConfig struct {
+        // Periodic refresh interval for background capabilities sync
+        CapabilitiesRefreshInterval time.Duration `yaml:"capabilities_refresh_interval"`
+        // TTL for cached capabilities entries
+        CapabilitiesCacheTTL        time.Duration `yaml:"capabilities_cache_ttl"`
+    }
 )
 
 // GetDSN returns the database connection string

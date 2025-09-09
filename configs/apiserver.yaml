@@ -95,3 +95,12 @@ auth:
     client_id: "${GITHUB_OAUTH_CLIENT_ID:}"
     client_secret: "${GITHUB_OAUTH_CLIENT_SECRET:}"
     redirect_uri: "${GITHUB_OAUTH_REDIRECT_URI:http://localhost:5234/api/auth/oauth/github/callback}"
+
+# MCP runtime (capabilities sync/cache) configuration
+mcp:
+  # Background refresh interval for fetching capabilities from MCP servers
+  # Examples: 120s, 2m, 5m
+  capabilities_refresh_interval: "${APISERVER_MCP_CAPABILITIES_REFRESH_INTERVAL:120s}"
+
+  # Cache TTL for capabilities entries (should be >= refresh interval)
+  capabilities_cache_ttl: "${APISERVER_MCP_CAPABILITIES_CACHE_TTL:5m}"

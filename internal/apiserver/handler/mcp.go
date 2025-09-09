@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -33,6 +34,8 @@ type MCP struct {
     capabilitiesCache sync.Map // key: tenant:name, value: *cachedCapabilities
     // refreshInterval defines how often the background refresher runs
     refreshInterval time.Duration
+    // cacheTTL defines how long a cached capabilities entry is valid
+    cacheTTL        time.Duration
 }
 
 type cachedCapabilities struct {
@@ -45,16 +48,31 @@ func (c *cachedCapabilities) isExpired() bool {
 	return time.Since(c.timestamp) > c.ttl
 }
 
-func NewMCP(db database.Database, store storage.Store, ntf notifier.Notifier, logger *zap.Logger) *MCP {
+func NewMCP(db database.Database, store storage.Store, ntf notifier.Notifier, logger *zap.Logger, refreshInterval time.Duration, cacheTTL time.Duration) *MCP {
     return &MCP{
         db:       db,
         store:    store,
         notifier: ntf,
         logger:   logger,
         capabilitiesCache: sync.Map{},
-        refreshInterval: 120 * time.Second, // default 120s background refresh interval
+        refreshInterval: func() time.Duration {
+            if refreshInterval > 0 {
+                return refreshInterval
+            }
+            return 120 * time.Second
+        }(),
+        cacheTTL: func() time.Duration {
+            if cacheTTL > 0 {
+                return cacheTTL
+            }
+            return 5 * time.Minute
+        }(),
     }
 }
+
+// buildCacheKey constructs the cache key for a tenant + server name pair.
+// Centralizing this avoids string concat typos across call sites.
+func (h *MCP) buildCacheKey(tenant, name string) string { return tenant + ":" + name }
 
 // StartCapabilitiesSync starts a background goroutine to periodically refresh
 // capabilities for all configured MCP backends. It performs an immediate
@@ -72,7 +90,7 @@ func (h *MCP) StartCapabilitiesSync(ctx context.Context) {
         zap.Duration("interval", interval))
 
     // Immediate refresh at startup
-    go h.refreshAllCapabilities(context.WithoutCancel(ctx))
+    go h.refreshAllCapabilities(ctx)
 
     // Periodic refresh
     go func() {
@@ -84,7 +102,7 @@ func (h *MCP) StartCapabilitiesSync(ctx context.Context) {
                 h.logger.Info("stopping MCP capabilities background refresh")
                 return
             case <-ticker.C:
-                h.refreshAllCapabilities(context.WithoutCancel(ctx))
+                h.refreshAllCapabilities(ctx)
             }
         }
     }()
@@ -120,7 +138,7 @@ func (h *MCP) refreshAllCapabilities(ctx context.Context) {
 // refreshCapabilitiesForConfig fetches capabilities and updates cache if successful.
 // It will not overwrite existing cache with empty/failed data.
 func (h *MCP) refreshCapabilitiesForConfig(ctx context.Context, cfg *config.MCPConfig) {
-    cacheKey := cfg.Tenant + ":" + cfg.Name
+    cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
     capabilities, err := h.fetchCapabilities(ctx, cfg)
     if err != nil {
         // Do not remove previous cache on error
@@ -147,7 +165,12 @@ func (h *MCP) updateCapabilitiesCache(cacheKey string, data *mcp.CapabilitiesInf
         data:      data,
         timestamp: time.Now(),
         // Keep TTL reasonably larger than refresh interval to prefer serving cache
-        ttl:       5 * time.Minute,
+        ttl:       func() time.Duration {
+            if h.cacheTTL > 0 {
+                return h.cacheTTL
+            }
+            return 5 * time.Minute
+        }(),
     }
     h.capabilitiesCache.Store(cacheKey, cached)
 }
@@ -335,9 +358,9 @@ func (h *MCP) HandleMCPServerUpdate(c *gin.Context) {
 		return
 	}
 
-	// Clear cache for this server
-	cacheKey := cfg.Tenant + ":" + cfg.Name
-	h.clearCapabilitiesCache(cacheKey)
+    // Clear cache for this server
+    cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
+    h.clearCapabilitiesCache(cacheKey)
 
 	h.logger.Info("MCP server updated successfully",
 		zap.String("server_name", cfg.Name))
@@ -575,7 +598,7 @@ func (h *MCP) HandleMCPServerCreate(c *gin.Context) {
     }
 
     // Clear cache for this server (in case it was previously created and cached)
-    cacheKey := cfg.Tenant + ":" + cfg.Name
+    cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
     h.clearCapabilitiesCache(cacheKey)
 
     // Trigger an immediate background fetch of capabilities for the new server.
@@ -647,9 +670,9 @@ func (h *MCP) HandleMCPServerDelete(c *gin.Context) {
 		return
 	}
 
-	// Clear cache for this server
-	cacheKey := existingCfg.Tenant + ":" + name
-	h.clearCapabilitiesCache(cacheKey)
+    // Clear cache for this server
+    cacheKey := h.buildCacheKey(existingCfg.Tenant, name)
+    h.clearCapabilitiesCache(cacheKey)
 
 	h.logger.Info("MCP server deleted successfully",
 		zap.String("server_name", name))
@@ -1009,7 +1032,7 @@ func (h *MCP) HandleGetCapabilities(c *gin.Context) {
 
     // Check cache first; will refresh in-place if expired and refresh succeeds.
     // If refresh fails, stale-but-valid data is still returned.
-    cacheKey := tenant + ":" + name
+    cacheKey := h.buildCacheKey(tenant, name)
     capabilities, err := h.getCapabilitiesFromCache(c.Request.Context(), cacheKey, cfg)
 	if err != nil {
 		h.logger.Error("failed to get capabilities",
@@ -1145,14 +1168,20 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 			}()
 
 			// Resources functionality not yet implemented in transport layer
-			// Complete the resource and resource template fetch placeholders
+			// Emit clear warnings to avoid silent failures and surface partial support
 			go func() {
 				defer serverWg.Done()
-				// Resource fetching will be implemented here
+				h.logger.Warn("resource fetching not implemented; skipping",
+					zap.String("server", serverCfg.Name))
+				// Push a non-fatal warning into the error channel for aggregation
+				errChan <- fmt.Errorf("resources fetching not implemented for server %s", serverCfg.Name)
 			}()
 			go func() {
 				defer serverWg.Done()
-				// Resource template fetching will be implemented here
+				h.logger.Warn("resource template fetching not implemented; skipping",
+					zap.String("server", serverCfg.Name))
+				// Push a non-fatal warning into the error channel for aggregation
+				errChan <- fmt.Errorf("resource templates fetching not implemented for server %s", serverCfg.Name)
 			}()
 
 			serverWg.Wait()
