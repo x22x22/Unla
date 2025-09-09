@@ -144,12 +144,22 @@ func LoadConfig[T Type](filename string) (*T, string, error) {
 		return nil, cfgPath, err
 	}
 
-	// Validate durations after unmarshalling
-	if mcpCfg, ok := any(&cfg).(*MCPGatewayConfig); ok {
-		if mcpCfg.ReloadInterval <= time.Second {
-			mcpCfg.ReloadInterval = 600 * time.Second
-		}
-	}
+    // Validate durations after unmarshalling
+    if mcpCfg, ok := any(&cfg).(*MCPGatewayConfig); ok {
+        if mcpCfg.ReloadInterval <= time.Second {
+            mcpCfg.ReloadInterval = 600 * time.Second
+        }
+    }
+
+    // Set defaults for apiserver MCP runtime if missing
+    if apiCfg, ok := any(&cfg).(*APIServerConfig); ok {
+        if apiCfg.MCP.CapabilitiesRefreshInterval <= 0 {
+            apiCfg.MCP.CapabilitiesRefreshInterval = 120 * time.Second
+        }
+        if apiCfg.MCP.CapabilitiesCacheTTL <= 0 {
+            apiCfg.MCP.CapabilitiesCacheTTL = 5 * time.Minute
+        }
+    }
 
 	return &cfg, cfgPath, nil
 }
