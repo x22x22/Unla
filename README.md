@@ -138,6 +138,37 @@ For more usage patterns, configuration examples, and integration guides, please 
 
 👉 **https://docs.unla.amoylab.com**
 
+### MCP Capabilities Refresh & Cache (apiserver)
+
+The apiserver now supports configuring the background refresh interval and cache TTL for MCP capabilities (tools/prompts/resources/resourceTemplates):
+
+- YAML config (`configs/apiserver.yaml`):
+
+```yaml
+mcp:
+  # Background refresh interval (default 120s)
+  capabilities_refresh_interval: "${APISERVER_MCP_CAPABILITIES_REFRESH_INTERVAL:120s}"
+
+  # Cache TTL (default 5m). Prefer TTL ≥ refresh interval.
+  capabilities_cache_ttl: "${APISERVER_MCP_CAPABILITIES_CACHE_TTL:5m}"
+```
+
+- Environment overrides
+  - `APISERVER_MCP_CAPABILITIES_REFRESH_INTERVAL` (e.g., `2m`)
+  - `APISERVER_MCP_CAPABILITIES_CACHE_TTL` (e.g., `10m`)
+
+- CLI overrides (highest priority)
+
+```bash
+./apiserver -c ./configs/apiserver.yaml \
+  --mcp-refresh-interval=2m \
+  --mcp-cache-ttl=10m
+```
+
+Notes:
+- When cache is expired, apiserver attempts a refresh; on failure it serves the last known (stale-but-valid) cache to avoid disruption.
+- Fetching resources and resourceTemplates is not implemented in the transport layer yet; warnings are logged, tools/prompts continue to work.
+
 ---
 
 ## 📄 License
