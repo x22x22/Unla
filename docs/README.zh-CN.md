@@ -163,38 +163,6 @@ docker run -d \
 
 👉 **https://docs.unla.amoylab.com**
 
-### MCP 能力刷新与缓存配置（apiserver）
-
-从当前版本起，apiserver 支持配置 MCP 能力信息（tools/prompts/resources/resourceTemplates）的后台刷新周期与缓存 TTL：
-
-- 配置项（`configs/apiserver.yaml`）
-
-```yaml
-mcp:
-  # 后台刷新能力信息的周期（默认 120s）。建议根据网内服务器数量与负载调整
-  capabilities_refresh_interval: "${APISERVER_MCP_CAPABILITIES_REFRESH_INTERVAL:120s}"
-
-  # 能力信息缓存 TTL（默认 5m）。建议 ≥ 刷新周期
-  capabilities_cache_ttl: "${APISERVER_MCP_CAPABILITIES_CACHE_TTL:5m}"
-```
-
-- 环境变量覆盖
-  - `APISERVER_MCP_CAPABILITIES_REFRESH_INTERVAL`（例如 `2m`、`150s`）
-  - `APISERVER_MCP_CAPABILITIES_CACHE_TTL`（例如 `10m`）
-
-- CLI 覆盖（优先于 YAML 与环境变量）
-
-```bash
-./apiserver -c ./configs/apiserver.yaml \
-  --mcp-refresh-interval=2m \
-  --mcp-cache-ttl=10m
-```
-
-说明与建议：
-- 刷新周期用于后台批量抓取各后端 MCP Server 的能力信息；TTL 是前端接口读取缓存的过期时间。
-- 当缓存过期时，apiserver 会尝试刷新；若刷新失败，将回退返回“过期但可用”的旧缓存，避免界面与调用中断。
-- 资源（resources）与资源模板（resourceTemplates）的抓取在底层传输层尚未实现；当前会输出 WARN 日志用于提示，但不影响已有工具与提示能力的获取。
-
 ---
 
 ## 📄 许可证
