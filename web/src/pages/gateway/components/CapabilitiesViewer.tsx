@@ -20,13 +20,13 @@ import {
   Tabs,
   Tab
 } from '@heroui/react';
-import React from 'react';
-import {useTranslation} from 'react-i18next';
+import copy from 'copy-to-clipboard';
 import hljs from 'highlight.js/lib/core';
 import json from 'highlight.js/lib/languages/json';
 import yaml from 'highlight.js/lib/languages/yaml';
-import copy from 'copy-to-clipboard';
 import YAML from 'js-yaml';
+import React from 'react';
+import {useTranslation} from 'react-i18next';
 import 'highlight.js/styles/github.css';
 
 import LocalIcon from '@/components/LocalIcon';
@@ -96,7 +96,7 @@ const CodeHighlight: React.FC<CodeHighlightProps> = ({ code, language, className
 
 // 导出功能组件
 interface ExportButtonProps {
-  data: any;
+  data: Record<string, unknown>;
   filename: string;
   className?: string;
 }
@@ -131,7 +131,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({ data, filename, className =
       URL.revokeObjectURL(url);
       
       toast.success(t('capabilities.export_success'));
-    } catch (error) {
+    } catch {
       toast.error(t('capabilities.export_failed'));
     }
   };
@@ -221,7 +221,7 @@ const CapabilityDetailModal: React.FC<CapabilityDetailModalProps> = ({
             {/* 参数详情 */}
             {hasProperties ? (
               <div className="space-y-3">
-                {Object.entries(tool.inputSchema.properties!).map(([key, prop]: [string, any]) => (
+                {Object.entries(tool.inputSchema.properties!).map(([key, prop]: [string, Record<string, unknown>]) => (
                   <div key={key} className="border border-default-200 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Code color="primary" size="sm">{key}</Code>
@@ -241,7 +241,7 @@ const CapabilityDetailModal: React.FC<CapabilityDetailModalProps> = ({
                       <div>
                         <span className="text-xs text-default-500 font-medium">可选值: </span>
                         <div className="flex gap-1 flex-wrap mt-1">
-                          {prop.enum.map((value: any, index: number) => (
+                          {prop.enum.map((value: unknown, index: number) => (
                             <Code key={index} size="sm" color="default">{String(value)}</Code>
                           ))}
                         </div>
@@ -529,13 +529,13 @@ const CapabilityDetailModal: React.FC<CapabilityDetailModalProps> = ({
 
     switch (type) {
       case 'tools':
-        return renderToolDetails({...capability, inputSchema: (capability as any).inputSchema} as Tool);
+        return renderToolDetails({...capability, inputSchema: (capability as Record<string, unknown>).inputSchema} as Tool);
       case 'prompts':
-        return renderPromptDetails({...capability, arguments: (capability as any).arguments} as Prompt);
+        return renderPromptDetails({...capability, arguments: (capability as Record<string, unknown>).arguments} as Prompt);
       case 'resources':
-        return renderResourceDetails({...capability, uri: (capability as any).uri} as Resource);
+        return renderResourceDetails({...capability, uri: (capability as Record<string, unknown>).uri} as Resource);
       case 'resourceTemplates':
-        return renderResourceTemplateDetails({...capability, uriTemplate: (capability as any).uriTemplate} as ResourceTemplate);
+        return renderResourceTemplateDetails({...capability, uriTemplate: (capability as Record<string, unknown>).uriTemplate} as ResourceTemplate);
       default:
         return null;
     }
@@ -790,10 +790,10 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
         if (advancedFilters.paramCountFilter !== 'all') {
           let paramCount = 0;
           if (type === 'tools') {
-            const tool = item as any;
+            const tool = item as Record<string, unknown> & { inputSchema?: { properties?: Record<string, unknown> } };
             paramCount = tool.inputSchema?.properties ? Object.keys(tool.inputSchema.properties).length : 0;
           } else if (type === 'prompts') {
-            const prompt = item as any;
+            const prompt = item as Record<string, unknown> & { arguments?: unknown[] };
             paramCount = prompt.arguments?.length || 0;
           }
           
@@ -807,7 +807,7 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
         
         // MIME类型筛选（仅适用于资源）
         if ((type === 'resources' || type === 'resourceTemplates') && advancedFilters.mimeTypeFilter) {
-          const mimeType = (item as any).mimeType || '';
+          const mimeType = (item as Record<string, unknown> & { mimeType?: string }).mimeType || '';
           if (!mimeType.toLowerCase().includes(advancedFilters.mimeTypeFilter.toLowerCase())) {
             return false;
           }
@@ -833,7 +833,7 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
     filtered.resourceTemplates = filterArray(data.resourceTemplates, 'resourceTemplates') as ResourceTemplate[];
 
     return filtered;
-  }, []);
+  }, [serverName, tenant]);
 
   // 搜索和类型筛选
   React.useEffect(() => {
@@ -960,7 +960,7 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
             
             {/* 工具入参信息 */}
             {type === 'tools' && (() => {
-              const tool = item as any;
+              const tool = item as Record<string, unknown> & { inputSchema?: { properties?: Record<string, unknown>; required?: string[] } };
               const properties = tool.inputSchema?.properties || {};
               const required = tool.inputSchema?.required || [];
               const paramCount = Object.keys(properties).length;
@@ -976,7 +976,16 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
                           {t('capabilities.parameters')} ({paramCount})
                         </span>
                       </div>
-                      <div onClick={(e) => e.stopPropagation()}>
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
                         <Button
                           size="sm"
                           variant="light"
@@ -1007,7 +1016,7 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
                             // 相同类型按字母顺序排序
                             return a.localeCompare(b);
                           })
-                          .map(([paramName, paramSchema]: [string, any]) => (
+                          .map(([paramName, paramSchema]: [string, Record<string, unknown>]) => (
                           <div key={paramName} className="flex items-start justify-between py-2 px-3 bg-default-50 rounded-lg">
                             <div className="flex-grow min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -1039,7 +1048,7 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
                                     <div>
                                       <span className="text-xs text-default-500">可选值: </span>
                                       <div className="flex gap-1 flex-wrap mt-1">
-                                        {paramSchema.enum.map((value: any, index: number) => (
+                                        {paramSchema.enum.map((value: unknown, index: number) => (
                                           <Code key={index} size="sm" color="default" className="text-xs">{String(value)}</Code>
                                         ))}
                                       </div>
