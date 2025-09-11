@@ -221,12 +221,14 @@ const CapabilityDetailModal: React.FC<CapabilityDetailModalProps> = ({
             {/* 参数详情 */}
             {hasProperties ? (
               <div className="space-y-3">
-                {Object.entries(tool.inputSchema.properties!).map(([key, prop]: [string, Record<string, unknown>]) => (
+                {Object.entries(tool.inputSchema.properties!).map(([key, prop]) => {
+                  const propSchema = prop as Record<string, unknown>;
+                  return (
                   <div key={key} className="border border-default-200 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Code color="primary" size="sm">{key}</Code>
-                      {prop.type && (
-                        <Chip variant="flat" color="secondary" size="sm">{prop.type}</Chip>
+                      {Boolean(propSchema.type) && (
+                        <Chip variant="flat" color="secondary" size="sm">{String(propSchema.type)}</Chip>
                       )}
                       {(tool.inputSchema.required as string[])?.includes?.(key) && (
                         <Chip variant="flat" color="danger" size="sm">
@@ -234,27 +236,28 @@ const CapabilityDetailModal: React.FC<CapabilityDetailModalProps> = ({
                         </Chip>
                       )}
                     </div>
-                    {prop.description && (
-                      <p className="text-xs text-default-600 mb-2">{prop.description}</p>
+                    {Boolean(propSchema.description) && (
+                      <p className="text-xs text-default-600 mb-2">{String(propSchema.description)}</p>
                     )}
-                    {prop.enum && (
+                    {Boolean(propSchema.enum) && Array.isArray(propSchema.enum) && (
                       <div>
                         <span className="text-xs text-default-500 font-medium">可选值: </span>
                         <div className="flex gap-1 flex-wrap mt-1">
-                          {prop.enum.map((value: unknown, index: number) => (
+                          {(propSchema.enum as unknown[]).map((value: unknown, index: number) => (
                             <Code key={index} size="sm" color="default">{String(value)}</Code>
                           ))}
                         </div>
                       </div>
                     )}
-                    {prop.default !== undefined && (
+                    {propSchema.default !== undefined && (
                       <div>
                         <span className="text-xs text-default-500 font-medium">默认值: </span>
-                        <Code size="sm" color="success">{JSON.stringify(prop.default)}</Code>
+                        <Code size="sm" color="success">{JSON.stringify(propSchema.default)}</Code>
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8">
@@ -1016,7 +1019,9 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
                             // 相同类型按字母顺序排序
                             return a.localeCompare(b);
                           })
-                          .map(([paramName, paramSchema]: [string, Record<string, unknown>]) => (
+                          .map(([paramName, paramSchema]) => {
+                            const schema = paramSchema as Record<string, unknown>;
+                            return (
                           <div key={paramName} className="flex items-start justify-between py-2 px-3 bg-default-50 rounded-lg">
                             <div className="flex-grow min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -1029,45 +1034,46 @@ const CapabilitiesViewer: React.FC<CapabilitiesViewerProps> = ({
                               </div>
                               <div className="space-y-2">
                                 <div className="flex items-center gap-3 text-xs text-default-600">
-                                  {paramSchema.type && (
+                                  {Boolean(schema.type) && (
                                     <div className="flex items-center gap-1">
                                       <LocalIcon icon="lucide:tag" className="text-xs" />
-                                      <span className="font-mono">{paramSchema.type}</span>
+                                      <span className="font-mono">{String(schema.type)}</span>
                                     </div>
                                   )}
-                                  {paramSchema.description && (
+                                  {Boolean(schema.description) && (
                                     <div className="flex items-center gap-1">
                                       <LocalIcon icon="lucide:file-text" className="text-xs" />
-                                      <span className="line-clamp-2">{paramSchema.description}</span>
+                                      <span className="line-clamp-2">{String(schema.description)}</span>
                                     </div>
                                   )}
                                 </div>
-                                {paramSchema.enum && (
+                                {Boolean(schema.enum) && Array.isArray(schema.enum) && (
                                   <div className="flex items-start gap-1">
                                     <LocalIcon icon="lucide:file-text" className="text-xs text-default-500 mt-0.5" />
                                     <div>
                                       <span className="text-xs text-default-500">可选值: </span>
                                       <div className="flex gap-1 flex-wrap mt-1">
-                                        {paramSchema.enum.map((value: unknown, index: number) => (
+                                        {(schema.enum as unknown[]).map((value: unknown, index: number) => (
                                           <Code key={index} size="sm" color="default" className="text-xs">{String(value)}</Code>
                                         ))}
                                       </div>
                                     </div>
                                   </div>
                                 )}
-                                {paramSchema.default !== undefined && (
+                                {schema.default !== undefined && (
                                   <div className="flex items-start gap-1">
                                     <LocalIcon icon="lucide:star" className="text-xs text-default-500 mt-0.5" />
                                     <div>
                                       <span className="text-xs text-default-500">默认值: </span>
-                                      <Code size="sm" color="success" className="text-xs">{String(paramSchema.default)}</Code>
+                                      <Code size="sm" color="success" className="text-xs">{String(schema.default)}</Code>
                                     </div>
                                   </div>
                                 )}
                               </div>
                             </div>
                           </div>
-                        ))}
+                          );
+                          })}
                       </div>
                     )}
                   </div>
