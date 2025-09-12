@@ -319,8 +319,16 @@ func (s *Server) handlePostMessage(c *gin.Context, conn session.Connection) {
 				Version: version.Get(),
 			},
 			Capabilities: mcp.ServerCapabilitiesSchema{
+				Logging: mcp.LoggingCapabilitySchema{},
 				Tools: mcp.ToolsCapabilitySchema{
 					ListChanged: true,
+				},
+				Prompts: mcp.PromptsCapabilitySchema{
+					ListChanged: false,
+				},
+				Resources: mcp.ResourcesCapabilitySchema{
+					Subscribe:   false,
+					ListChanged: false,
 				},
 			},
 		}
@@ -552,6 +560,31 @@ func (s *Server) handlePostMessage(c *gin.Context, conn session.Connection) {
 		s.sendSuccessResponse(c, conn, req, resp, true)
 		return
 
+	case mcp.LoggingSetLevel:
+		// Minimal stub: accept requested level and return empty object
+		type params struct {
+			Level string `json:"level"`
+		}
+		var p params
+		_ = json.Unmarshal(req.Params, &p)
+		s.sendSuccessResponse(c, conn, req, struct{}{}, true)
+	case mcp.ResourcesList:
+		s.sendSuccessResponse(c, conn, req, struct {
+			Resources []struct{} `json:"resources"`
+		}{Resources: []struct{}{}}, true)
+	case mcp.ResourcesTemplatesList:
+		s.sendSuccessResponse(c, conn, req, struct {
+			ResourceTemplates []struct{} `json:"resourceTemplates"`
+		}{ResourceTemplates: []struct{}{}}, true)
+	case mcp.ResourcesRead:
+		type params struct {
+			URI string `json:"uri"`
+		}
+		var p params
+		_ = json.Unmarshal(req.Params, &p)
+		s.sendSuccessResponse(c, conn, req, struct {
+			Contents []struct{} `json:"contents"`
+		}{Contents: []struct{}{}}, true)
 	default:
 		s.sendProtocolError(c, req.Id, "Unknown method", http.StatusNotFound, mcp.ErrorCodeMethodNotFound)
 	}

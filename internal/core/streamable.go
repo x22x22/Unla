@@ -195,6 +195,13 @@ func (s *Server) handleMCPRequest(c *gin.Context, req mcp.JSONRPCRequest, conn s
 				Tools: mcp.ToolsCapabilitySchema{
 					ListChanged: true,
 				},
+				Prompts: mcp.PromptsCapabilitySchema{
+					ListChanged: false,
+				},
+				Resources: mcp.ResourcesCapabilitySchema{
+					Subscribe:   false,
+					ListChanged: false,
+				},
 			},
 			ServerInfo: mcp.ImplementationSchema{
 				Name:    cnst.AppName,
@@ -289,6 +296,44 @@ func (s *Server) handleMCPRequest(c *gin.Context, req mcp.JSONRPCRequest, conn s
 		}
 
 		s.sendSuccessResponse(c, conn, req, result, false)
+		return
+
+	case mcp.LoggingSetLevel:
+		// Minimal stub: accept requested level and return empty object
+		// Inspector may invoke this regardless of server support; avoid -32601
+		type params struct {
+			Level string `json:"level"`
+		}
+		var p params
+		// Ignore unmarshal errors; treat as best-effort no-op
+		_ = json.Unmarshal(req.Params, &p)
+		s.sendSuccessResponse(c, conn, req, struct{}{}, false)
+		return
+
+	case mcp.ResourcesList:
+		// Return an empty resources list by default
+		s.sendSuccessResponse(c, conn, req, struct {
+			Resources []struct{} `json:"resources"`
+		}{Resources: []struct{}{}}, false)
+		return
+
+	case mcp.ResourcesTemplatesList:
+		// Return an empty resourceTemplates list by default
+		s.sendSuccessResponse(c, conn, req, struct {
+			ResourceTemplates []struct{} `json:"resourceTemplates"`
+		}{ResourceTemplates: []struct{}{}}, false)
+		return
+
+	case mcp.ResourcesRead:
+		// Minimal stub: acknowledge read with empty contents to avoid -32601
+		type params struct {
+			URI string `json:"uri"`
+		}
+		var p params
+		_ = json.Unmarshal(req.Params, &p)
+		s.sendSuccessResponse(c, conn, req, struct {
+			Contents []struct{} `json:"contents"`
+		}{Contents: []struct{}{}}, false)
 		return
 
 	case mcp.PromptsList:
