@@ -1,11 +1,11 @@
 package main
 
 import (
-    "context"
-    "fmt"
-    "log"
-    "os"
-    "time"
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"time"
 
 	"github.com/amoylab/unla/internal/apiserver/database"
 	apiserverHandler "github.com/amoylab/unla/internal/apiserver/handler"
@@ -27,9 +27,9 @@ import (
 )
 
 var (
-    configPath string
-    mcpRefreshInterval time.Duration
-    mcpCacheTTL        time.Duration
+	configPath         string
+	mcpRefreshInterval time.Duration
+	mcpCacheTTL        time.Duration
 
 	versionCmd = &cobra.Command{
 		Use:   "version",
@@ -50,11 +50,11 @@ var (
 )
 
 func init() {
-    rootCmd.PersistentFlags().StringVarP(&configPath, "conf", "c", cnst.ApiServerYaml, "path to configuration file, like /etc/unla/apiserver.yaml")
-    // CLI 覆盖：能力刷新周期与缓存 TTL
-    rootCmd.PersistentFlags().DurationVar(&mcpRefreshInterval, "mcp-refresh-interval", 0, "interval for background MCP capabilities refresh (e.g. 120s, 2m)")
-    rootCmd.PersistentFlags().DurationVar(&mcpCacheTTL, "mcp-cache-ttl", 0, "TTL for cached MCP capabilities (e.g. 5m, 10m)")
-    rootCmd.AddCommand(versionCmd)
+	rootCmd.PersistentFlags().StringVarP(&configPath, "conf", "c", cnst.ApiServerYaml, "path to configuration file, like /etc/unla/apiserver.yaml")
+	// CLI 覆盖：能力刷新周期与缓存 TTL
+	rootCmd.PersistentFlags().DurationVar(&mcpRefreshInterval, "mcp-refresh-interval", 0, "interval for background MCP capabilities refresh (e.g. 120s, 2m)")
+	rootCmd.PersistentFlags().DurationVar(&mcpCacheTTL, "mcp-cache-ttl", 0, "TTL for cached MCP capabilities (e.g. 5m, 10m)")
+	rootCmd.AddCommand(versionCmd)
 }
 
 // initLogger initializes the application logger
@@ -155,19 +155,19 @@ func initRouter(ctx context.Context, db database.Database, store storage.Store, 
 		SecretKey: cfg.JWT.SecretKey,
 		Duration:  cfg.JWT.Duration,
 	})
-	
+
 	// Initialize OAuth auth service
 	authService, err := auth.NewAuth(logger, cfg.Auth)
 	if err != nil {
 		logger.Fatal("Failed to initialize auth service", zap.Error(err))
 	}
-	
+
 	authH := apiserverHandler.NewHandler(db, jwtService, mcpCfg, logger)
 	oauthH := apiserverHandler.NewOAuthHandler(db, jwtService, authService, logger)
 
 	authG := r.Group("/api/auth")
 	authG.POST("/login", authH.Login)
-	
+
 	// OAuth routes
 	oauthG := authG.Group("/oauth")
 	{
@@ -178,22 +178,22 @@ func initRouter(ctx context.Context, db database.Database, store storage.Store, 
 		oauthG.GET("/github/callback", oauthH.GitHubCallback)
 	}
 
-    // Protected routes
-    var mcpHandler *apiserverHandler.MCP
-    protected := r.Group("/api")
-    protected.Use(middleware.JWTAuthMiddleware(jwtService))
-    {
-        chatHandler := apiserverHandler.NewChat(db, logger)
-        mcpHandler = apiserverHandler.NewMCP(
-            db,
-            store,
-            ntf,
-            logger,
-            cfg.MCP.CapabilitiesRefreshInterval,
-            cfg.MCP.CapabilitiesCacheTTL,
-        )
-        openapiHandler := apiserverHandler.NewOpenAPI(db, store, ntf, logger)
-        systemPromptHandler := apiserverHandler.NewSystemPrompt(db, logger)
+	// Protected routes
+	var mcpHandler *apiserverHandler.MCP
+	protected := r.Group("/api")
+	protected.Use(middleware.JWTAuthMiddleware(jwtService))
+	{
+		chatHandler := apiserverHandler.NewChat(db, logger)
+		mcpHandler = apiserverHandler.NewMCP(
+			db,
+			store,
+			ntf,
+			logger,
+			cfg.MCP.CapabilitiesRefreshInterval,
+			cfg.MCP.CapabilitiesCacheTTL,
+		)
+		openapiHandler := apiserverHandler.NewOpenAPI(db, store, ntf, logger)
+		systemPromptHandler := apiserverHandler.NewSystemPrompt(db, logger)
 
 		// Auth routes
 		protected.POST("/auth/change-password", authH.ChangePassword)
@@ -237,10 +237,10 @@ func initRouter(ctx context.Context, db database.Database, store storage.Store, 
 			mcpGroup.PUT("/configs", mcpHandler.HandleMCPServerUpdate)
 			mcpGroup.DELETE("/configs/:tenant/:name", mcpHandler.HandleMCPServerDelete)
 			mcpGroup.POST("/configs/sync", mcpHandler.HandleMCPServerSync)
-			
+
 			// Capabilities endpoint
 			mcpGroup.GET("/capabilities/:tenant/:name", mcpHandler.HandleGetCapabilities)
-			
+
 		}
 
 		// OpenAPI routes
@@ -266,9 +266,9 @@ func initRouter(ctx context.Context, db database.Database, store storage.Store, 
 
 	r.Static("/web", "./web")
 
-    // Start background MCP capabilities refresh (interval from config)
-    mcpHandler.StartCapabilitiesSync(ctx)
-    return r
+	// Start background MCP capabilities refresh (interval from config)
+	mcpHandler.StartCapabilitiesSync(ctx)
+	return r
 }
 
 // startServer starts the HTTP server
@@ -297,19 +297,19 @@ func initI18n(cfg *config.I18nConfig) {
 }
 
 func run() {
-    ctx, cancel := context.WithCancel(context.Background())
-    defer cancel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-    // Load configuration first
-    cfg := initConfig()
+	// Load configuration first
+	cfg := initConfig()
 
-    // 覆盖配置：若 CLI 提供了有效值则覆盖 YAML 配置
-    if mcpRefreshInterval > 0 {
-        cfg.MCP.CapabilitiesRefreshInterval = mcpRefreshInterval
-    }
-    if mcpCacheTTL > 0 {
-        cfg.MCP.CapabilitiesCacheTTL = mcpCacheTTL
-    }
+	// 覆盖配置：若 CLI 提供了有效值则覆盖 YAML 配置
+	if mcpRefreshInterval > 0 {
+		cfg.MCP.CapabilitiesRefreshInterval = mcpRefreshInterval
+	}
+	if mcpCacheTTL > 0 {
+		cfg.MCP.CapabilitiesCacheTTL = mcpCacheTTL
+	}
 
 	// Initialize logger with configuration
 	logger := initLogger(cfg)

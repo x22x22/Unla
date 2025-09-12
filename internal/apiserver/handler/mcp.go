@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/amoylab/unla/internal/apiserver/database"
 	"github.com/amoylab/unla/internal/auth/jwt"
 	"github.com/amoylab/unla/internal/common/config"
@@ -22,20 +21,21 @@ import (
 	"github.com/amoylab/unla/internal/mcp/storage/notifier"
 	"github.com/amoylab/unla/internal/template"
 	"github.com/amoylab/unla/pkg/mcp"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
 type MCP struct {
-    db       database.Database
-    store    storage.Store
-    notifier notifier.Notifier
-    logger   *zap.Logger
-    capabilitiesCache sync.Map // key: tenant:name, value: *cachedCapabilities
-    // refreshInterval defines how often the background refresher runs
-    refreshInterval time.Duration
-    // cacheTTL defines how long a cached capabilities entry is valid
-    cacheTTL        time.Duration
+	db                database.Database
+	store             storage.Store
+	notifier          notifier.Notifier
+	logger            *zap.Logger
+	capabilitiesCache sync.Map // key: tenant:name, value: *cachedCapabilities
+	// refreshInterval defines how often the background refresher runs
+	refreshInterval time.Duration
+	// cacheTTL defines how long a cached capabilities entry is valid
+	cacheTTL time.Duration
 }
 
 type cachedCapabilities struct {
@@ -49,25 +49,25 @@ func (c *cachedCapabilities) isExpired() bool {
 }
 
 func NewMCP(db database.Database, store storage.Store, ntf notifier.Notifier, logger *zap.Logger, refreshInterval time.Duration, cacheTTL time.Duration) *MCP {
-    return &MCP{
-        db:       db,
-        store:    store,
-        notifier: ntf,
-        logger:   logger,
-        capabilitiesCache: sync.Map{},
-        refreshInterval: func() time.Duration {
-            if refreshInterval > 0 {
-                return refreshInterval
-            }
-            return 120 * time.Second
-        }(),
-        cacheTTL: func() time.Duration {
-            if cacheTTL > 0 {
-                return cacheTTL
-            }
-            return 5 * time.Minute
-        }(),
-    }
+	return &MCP{
+		db:                db,
+		store:             store,
+		notifier:          ntf,
+		logger:            logger,
+		capabilitiesCache: sync.Map{},
+		refreshInterval: func() time.Duration {
+			if refreshInterval > 0 {
+				return refreshInterval
+			}
+			return 120 * time.Second
+		}(),
+		cacheTTL: func() time.Duration {
+			if cacheTTL > 0 {
+				return cacheTTL
+			}
+			return 5 * time.Minute
+		}(),
+	}
 }
 
 // buildCacheKey constructs the cache key for a tenant + server name pair.
@@ -81,98 +81,98 @@ func (h *MCP) buildCacheKey(tenant, name string) string { return tenant + ":" + 
 // TODO: For multi-instance deployments, add coordination (e.g., distributed locks)
 // to avoid redundant refreshes across instances.
 func (h *MCP) StartCapabilitiesSync(ctx context.Context) {
-    interval := h.refreshInterval
-    if interval <= 0 {
-        interval = 120 * time.Second
-    }
+	interval := h.refreshInterval
+	if interval <= 0 {
+		interval = 120 * time.Second
+	}
 
-    h.logger.Info("starting MCP capabilities background refresh",
-        zap.Duration("interval", interval))
+	h.logger.Info("starting MCP capabilities background refresh",
+		zap.Duration("interval", interval))
 
-    // Immediate refresh at startup
-    go h.refreshAllCapabilities(ctx)
+	// Immediate refresh at startup
+	go h.refreshAllCapabilities(ctx)
 
-    // Periodic refresh
-    go func() {
-        ticker := time.NewTicker(interval)
-        defer ticker.Stop()
-        for {
-            select {
-            case <-ctx.Done():
-                h.logger.Info("stopping MCP capabilities background refresh")
-                return
-            case <-ticker.C:
-                h.refreshAllCapabilities(ctx)
-            }
-        }
-    }()
+	// Periodic refresh
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				h.logger.Info("stopping MCP capabilities background refresh")
+				return
+			case <-ticker.C:
+				h.refreshAllCapabilities(ctx)
+			}
+		}
+	}()
 }
 
 // refreshAllCapabilities fetches and updates cache for all MCP configs
 func (h *MCP) refreshAllCapabilities(ctx context.Context) {
-    cfgs, err := h.store.List(ctx)
-    if err != nil {
-        h.logger.Error("failed to list MCP configs for capabilities refresh", zap.Error(err))
-        return
-    }
+	cfgs, err := h.store.List(ctx)
+	if err != nil {
+		h.logger.Error("failed to list MCP configs for capabilities refresh", zap.Error(err))
+		return
+	}
 
-    if len(cfgs) == 0 {
-        h.logger.Debug("no MCP configs found for capabilities refresh")
-        return
-    }
+	if len(cfgs) == 0 {
+		h.logger.Debug("no MCP configs found for capabilities refresh")
+		return
+	}
 
-    var wg sync.WaitGroup
-    for _, cfg := range cfgs {
-        if cfg == nil {
-            continue
-        }
-        wg.Add(1)
-        go func(conf *config.MCPConfig) {
-            defer wg.Done()
-            h.refreshCapabilitiesForConfig(ctx, conf)
-        }(cfg)
-    }
-    wg.Wait()
+	var wg sync.WaitGroup
+	for _, cfg := range cfgs {
+		if cfg == nil {
+			continue
+		}
+		wg.Add(1)
+		go func(conf *config.MCPConfig) {
+			defer wg.Done()
+			h.refreshCapabilitiesForConfig(ctx, conf)
+		}(cfg)
+	}
+	wg.Wait()
 }
 
 // refreshCapabilitiesForConfig fetches capabilities and updates cache if successful.
 // It will not overwrite existing cache with empty/failed data.
 func (h *MCP) refreshCapabilitiesForConfig(ctx context.Context, cfg *config.MCPConfig) {
-    cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
-    capabilities, err := h.fetchCapabilities(ctx, cfg)
-    if err != nil {
-        // Do not remove previous cache on error
-        h.logger.Warn("capabilities refresh failed; keeping previous cache",
-            zap.String("tenant", cfg.Tenant),
-            zap.String("name", cfg.Name),
-            zap.Error(err))
-        return
-    }
+	cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
+	capabilities, err := h.fetchCapabilities(ctx, cfg)
+	if err != nil {
+		// Do not remove previous cache on error
+		h.logger.Warn("capabilities refresh failed; keeping previous cache",
+			zap.String("tenant", cfg.Tenant),
+			zap.String("name", cfg.Name),
+			zap.Error(err))
+		return
+	}
 
-    h.updateCapabilitiesCache(cacheKey, capabilities)
-    h.logger.Info("capabilities refreshed",
-        zap.String("tenant", cfg.Tenant),
-        zap.String("name", cfg.Name),
-        zap.Int("tools", len(capabilities.Tools)),
-        zap.Int("prompts", len(capabilities.Prompts)),
-        zap.Int("resources", len(capabilities.Resources)),
-        zap.Int("resource_templates", len(capabilities.ResourceTemplates)))
+	h.updateCapabilitiesCache(cacheKey, capabilities)
+	h.logger.Info("capabilities refreshed",
+		zap.String("tenant", cfg.Tenant),
+		zap.String("name", cfg.Name),
+		zap.Int("tools", len(capabilities.Tools)),
+		zap.Int("prompts", len(capabilities.Prompts)),
+		zap.Int("resources", len(capabilities.Resources)),
+		zap.Int("resource_templates", len(capabilities.ResourceTemplates)))
 }
 
 // updateCapabilitiesCache stores capabilities with a fixed TTL
 func (h *MCP) updateCapabilitiesCache(cacheKey string, data *mcp.CapabilitiesInfo) {
-    cached := &cachedCapabilities{
-        data:      data,
-        timestamp: time.Now(),
-        // Keep TTL reasonably larger than refresh interval to prefer serving cache
-        ttl:       func() time.Duration {
-            if h.cacheTTL > 0 {
-                return h.cacheTTL
-            }
-            return 5 * time.Minute
-        }(),
-    }
-    h.capabilitiesCache.Store(cacheKey, cached)
+	cached := &cachedCapabilities{
+		data:      data,
+		timestamp: time.Now(),
+		// Keep TTL reasonably larger than refresh interval to prefer serving cache
+		ttl: func() time.Duration {
+			if h.cacheTTL > 0 {
+				return h.cacheTTL
+			}
+			return 5 * time.Minute
+		}(),
+	}
+	h.capabilitiesCache.Store(cacheKey, cached)
 }
 
 // checkTenantPermission checks if the user has permission to access the specified tenant and
@@ -358,9 +358,9 @@ func (h *MCP) HandleMCPServerUpdate(c *gin.Context) {
 		return
 	}
 
-    // Clear cache for this server
-    cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
-    h.clearCapabilitiesCache(cacheKey)
+	// Clear cache for this server
+	cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
+	h.clearCapabilitiesCache(cacheKey)
 
 	h.logger.Info("MCP server updated successfully",
 		zap.String("server_name", cfg.Name))
@@ -510,7 +510,7 @@ func (h *MCP) HandleListMCPServers(c *gin.Context) {
 }
 
 func (h *MCP) HandleMCPServerCreate(c *gin.Context) {
-    h.logger.Info("handling MCP server create request")
+	h.logger.Info("handling MCP server create request")
 
 	// Read the raw YAML content from request body
 	content, err := c.GetRawData()
@@ -591,24 +591,24 @@ func (h *MCP) HandleMCPServerCreate(c *gin.Context) {
 	}
 
 	// Send reload signal to gateway using notifier
-    if err := h.notifier.NotifyUpdate(c.Request.Context(), &cfg); err != nil {
-        h.logger.Error("failed to reload gateway", zap.Error(err))
-        i18n.RespondWithError(c, i18n.ErrInternalServer.WithParam("Reason", "Failed to reload gateway: "+err.Error()))
-        return
-    }
+	if err := h.notifier.NotifyUpdate(c.Request.Context(), &cfg); err != nil {
+		h.logger.Error("failed to reload gateway", zap.Error(err))
+		i18n.RespondWithError(c, i18n.ErrInternalServer.WithParam("Reason", "Failed to reload gateway: "+err.Error()))
+		return
+	}
 
-    // Clear cache for this server (in case it was previously created and cached)
-    cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
-    h.clearCapabilitiesCache(cacheKey)
+	// Clear cache for this server (in case it was previously created and cached)
+	cacheKey := h.buildCacheKey(cfg.Tenant, cfg.Name)
+	h.clearCapabilitiesCache(cacheKey)
 
-    // Trigger an immediate background fetch of capabilities for the new server.
-    // Use a short-lived context so it doesn't tie to the request lifecycle.
-    go func(conf *config.MCPConfig) {
-        // 30s timeout for the initial fetch attempt
-        ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-        defer cancel()
-        h.refreshCapabilitiesForConfig(ctx, conf)
-    }(&cfg)
+	// Trigger an immediate background fetch of capabilities for the new server.
+	// Use a short-lived context so it doesn't tie to the request lifecycle.
+	go func(conf *config.MCPConfig) {
+		// 30s timeout for the initial fetch attempt
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		h.refreshCapabilitiesForConfig(ctx, conf)
+	}(&cfg)
 
 	h.logger.Info("MCP server created successfully",
 		zap.String("server_name", cfg.Name))
@@ -670,9 +670,9 @@ func (h *MCP) HandleMCPServerDelete(c *gin.Context) {
 		return
 	}
 
-    // Clear cache for this server
-    cacheKey := h.buildCacheKey(existingCfg.Tenant, name)
-    h.clearCapabilitiesCache(cacheKey)
+	// Clear cache for this server
+	cacheKey := h.buildCacheKey(existingCfg.Tenant, name)
+	h.clearCapabilitiesCache(cacheKey)
 
 	h.logger.Info("MCP server deleted successfully",
 		zap.String("server_name", name))
@@ -1030,10 +1030,10 @@ func (h *MCP) HandleGetCapabilities(c *gin.Context) {
 		return
 	}
 
-    // Check cache first; will refresh in-place if expired and refresh succeeds.
-    // If refresh fails, stale-but-valid data is still returned.
-    cacheKey := h.buildCacheKey(tenant, name)
-    capabilities, err := h.getCapabilitiesFromCache(c.Request.Context(), cacheKey, cfg)
+	// Check cache first; will refresh in-place if expired and refresh succeeds.
+	// If refresh fails, stale-but-valid data is still returned.
+	cacheKey := h.buildCacheKey(tenant, name)
+	capabilities, err := h.getCapabilitiesFromCache(c.Request.Context(), cacheKey, cfg)
 	if err != nil {
 		h.logger.Error("failed to get capabilities",
 			zap.String("tenant", tenant),
@@ -1074,7 +1074,7 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 		wg.Add(1)
 		go func(serverCfg config.MCPServerConfig) {
 			defer wg.Done()
-			
+
 			// Create transport for this MCP server
 			transport, err := mcpproxy.NewTransport(serverCfg)
 			if err != nil {
@@ -1120,7 +1120,7 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 					errChan <- err
 					return
 				}
-				
+
 				// Convert to MCP tools
 				mcpTools := make([]mcp.MCPTool, len(tools))
 				for i, tool := range tools {
@@ -1150,7 +1150,7 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 					errChan <- err
 					return
 				}
-				
+
 				// Convert to MCP prompts
 				mcpPrompts := make([]mcp.MCPPrompt, len(prompts))
 				for i, prompt := range prompts {
@@ -1204,9 +1204,9 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 			zap.Int("error_count", len(errors)),
 			zap.Int("tools_fetched", len(capabilities.Tools)),
 			zap.Int("prompts_fetched", len(capabilities.Prompts)))
-		
+
 		// If we didn't get any capabilities at all, return the first error
-		if len(capabilities.Tools) == 0 && len(capabilities.Prompts) == 0 && 
+		if len(capabilities.Tools) == 0 && len(capabilities.Prompts) == 0 &&
 			len(capabilities.Resources) == 0 && len(capabilities.ResourceTemplates) == 0 {
 			return nil, errors[0]
 		}
@@ -1220,49 +1220,49 @@ func (h *MCP) fetchCapabilities(ctx context.Context, cfg *config.MCPConfig) (*mc
 // refresh fails, the stale cached data will be returned instead of erroring
 // out, to avoid overwriting/losing previously fetched capabilities.
 func (h *MCP) getCapabilitiesFromCache(ctx context.Context, cacheKey string, cfg *config.MCPConfig) (*mcp.CapabilitiesInfo, error) {
-    // Check if we have cached data
-    if cached, ok := h.capabilitiesCache.Load(cacheKey); ok {
-        if cachedCaps, ok := cached.(*cachedCapabilities); ok {
-            // Not expired → return immediately
-            if !cachedCaps.isExpired() {
-                h.logger.Debug("returning cached capabilities",
-                    zap.String("cache_key", cacheKey),
-                    zap.Time("cached_at", cachedCaps.timestamp))
-                return cachedCaps.data, nil
-            }
+	// Check if we have cached data
+	if cached, ok := h.capabilitiesCache.Load(cacheKey); ok {
+		if cachedCaps, ok := cached.(*cachedCapabilities); ok {
+			// Not expired → return immediately
+			if !cachedCaps.isExpired() {
+				h.logger.Debug("returning cached capabilities",
+					zap.String("cache_key", cacheKey),
+					zap.Time("cached_at", cachedCaps.timestamp))
+				return cachedCaps.data, nil
+			}
 
-            // Expired → try refresh, but keep serving stale if refresh fails
-            h.logger.Debug("cached capabilities expired, attempting refresh",
-                zap.String("cache_key", cacheKey),
-                zap.Time("cached_at", cachedCaps.timestamp))
+			// Expired → try refresh, but keep serving stale if refresh fails
+			h.logger.Debug("cached capabilities expired, attempting refresh",
+				zap.String("cache_key", cacheKey),
+				zap.Time("cached_at", cachedCaps.timestamp))
 
-            capabilities, err := h.fetchCapabilities(ctx, cfg)
-            if err != nil {
-                h.logger.Warn("capabilities refresh failed; serving stale cache",
-                    zap.String("cache_key", cacheKey),
-                    zap.Error(err))
-                // Return stale data (do not delete cache)
-                return cachedCaps.data, nil
-            }
-            // Update cache in-place
-            h.updateCapabilitiesCache(cacheKey, capabilities)
-            h.logger.Debug("capabilities cache refreshed",
-                zap.String("cache_key", cacheKey))
-            return capabilities, nil
-        }
-    }
+			capabilities, err := h.fetchCapabilities(ctx, cfg)
+			if err != nil {
+				h.logger.Warn("capabilities refresh failed; serving stale cache",
+					zap.String("cache_key", cacheKey),
+					zap.Error(err))
+				// Return stale data (do not delete cache)
+				return cachedCaps.data, nil
+			}
+			// Update cache in-place
+			h.updateCapabilitiesCache(cacheKey, capabilities)
+			h.logger.Debug("capabilities cache refreshed",
+				zap.String("cache_key", cacheKey))
+			return capabilities, nil
+		}
+	}
 
-    // No cache available → fetch fresh
-    h.logger.Debug("no cache found; fetching capabilities",
-        zap.String("cache_key", cacheKey))
-    capabilities, err := h.fetchCapabilities(ctx, cfg)
-    if err != nil {
-        return nil, err
-    }
-    h.updateCapabilitiesCache(cacheKey, capabilities)
-    h.logger.Debug("capabilities cached successfully",
-        zap.String("cache_key", cacheKey))
-    return capabilities, nil
+	// No cache available → fetch fresh
+	h.logger.Debug("no cache found; fetching capabilities",
+		zap.String("cache_key", cacheKey))
+	capabilities, err := h.fetchCapabilities(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	h.updateCapabilitiesCache(cacheKey, capabilities)
+	h.logger.Debug("capabilities cached successfully",
+		zap.String("cache_key", cacheKey))
+	return capabilities, nil
 }
 
 // clearCapabilitiesCache clears cache for a specific server or all if key is empty

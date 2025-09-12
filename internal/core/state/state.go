@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ifuryst/lol"
 	"github.com/amoylab/unla/internal/common/cnst"
 	"github.com/amoylab/unla/internal/common/config"
 	"github.com/amoylab/unla/internal/core/mcpproxy"
 	"github.com/amoylab/unla/internal/template"
 	"github.com/amoylab/unla/pkg/mcp"
+	"github.com/ifuryst/lol"
 	"go.uber.org/zap"
 )
 
 type (
-	uriPrefix string
-	toolName  string
-	promptName  string
+	uriPrefix  string
+	toolName   string
+	promptName string
 
 	// State contains all the read-only shared state
 	State struct {
@@ -36,7 +36,7 @@ type (
 		tools       map[toolName]*config.ToolConfig
 		toolSchemas []mcp.ToolSchema
 
-		prompts      map[promptName]*config.PromptConfig
+		prompts       map[promptName]*config.PromptConfig
 		promptSchemas []mcp.PromptSchema
 	}
 
@@ -121,16 +121,16 @@ func BuildStateFromConfig(ctx context.Context, cfgs []*config.MCPConfig, oldStat
 				runtime.server = &server
 				runtime.tools = allowedTools
 				runtime.toolSchemas = allowedToolSchemas
-				//runtime.prompts = map[promptName]*cfg.Prompts	
+				//runtime.prompts = map[promptName]*cfg.Prompts
 				for i := range cfg.Prompts {
-   					p := &cfg.Prompts[i]
-    				runtime.prompts[promptName(p.Name)] = p
+					p := &cfg.Prompts[i]
+					runtime.prompts[promptName(p.Name)] = p
 				}
 				//runtime.promptSchemas = cfg.Prompts.ToPromptSchemas()
 				runtime.promptSchemas = make([]mcp.PromptSchema, len(cfg.Prompts))
 				for i, p := range cfg.Prompts {
-    				runtime.promptSchemas[i] = p.ToPromptSchema()
-				}				
+					runtime.promptSchemas[i] = p.ToPromptSchema()
+				}
 				newState.runtime[uriPrefix(prefix)] = runtime
 			}
 		}

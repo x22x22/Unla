@@ -27,10 +27,10 @@ func parseHeaderList(headerList string, caseInsensitive bool) []string {
 	if headerList == "" {
 		return []string{}
 	}
-	
+
 	headers := strings.Split(headerList, ",")
 	result := make([]string, 0, len(headers))
-	
+
 	for _, header := range headers {
 		header = strings.TrimSpace(header)
 		if header != "" {
@@ -40,7 +40,7 @@ func parseHeaderList(headerList string, caseInsensitive bool) []string {
 			result = append(result, header)
 		}
 	}
-	
+
 	return result
 }
 
@@ -85,7 +85,7 @@ func NewServer(logger *zap.Logger, port int, store storage.Store, sessionStore s
 		forwardConfig:   forwardConfig,
 		caseInsensitive: forwardConfig.Header.CaseInsensitive,
 	}
-	
+
 	// Pre-parse header lists for efficient runtime lookup (only if forward is enabled)
 	if forwardConfig.Enabled {
 		s.ignoreHeaders = parseHeaderList(forwardConfig.Header.IgnoreHeaders, forwardConfig.Header.CaseInsensitive)

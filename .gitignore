@@ -74,3 +74,4 @@ dist
 bin
 
 .history/*
+coverage.html

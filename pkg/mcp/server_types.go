@@ -269,12 +269,12 @@ type (
 
 	// CapabilitiesInfo represents the capabilities information for an MCP server
 	CapabilitiesInfo struct {
-		Tools             []MCPTool            `json:"tools"`
-		Prompts           []MCPPrompt          `json:"prompts"`
-		Resources         []MCPResource        `json:"resources"`
+		Tools             []MCPTool             `json:"tools"`
+		Prompts           []MCPPrompt           `json:"prompts"`
+		Resources         []MCPResource         `json:"resources"`
 		ResourceTemplates []MCPResourceTemplate `json:"resourceTemplates"`
-		LastSynced        time.Time            `json:"lastSynced"`
-		ServerInfo        ImplementationSchema `json:"serverInfo"`
+		LastSynced        time.Time             `json:"lastSynced"`
+		ServerInfo        ImplementationSchema  `json:"serverInfo"`
 	}
 
 	// MCPTool represents a tool in MCP capabilities
@@ -289,10 +289,10 @@ type (
 
 	// MCPPrompt represents a prompt in MCP capabilities
 	MCPPrompt struct {
-		Name           string                 `json:"name"`
-		Description    string                 `json:"description"`
-		Arguments      []PromptArgumentSchema `json:"arguments"`
-		LastSynced     time.Time             `json:"lastSynced"`
+		Name        string                 `json:"name"`
+		Description string                 `json:"description"`
+		Arguments   []PromptArgumentSchema `json:"arguments"`
+		LastSynced  time.Time              `json:"lastSynced"`
 	}
 
 	// MCPResource represents a resource in MCP capabilities

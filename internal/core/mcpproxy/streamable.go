@@ -8,13 +8,13 @@ import (
 
 	"github.com/amoylab/unla/internal/common/cnst"
 
-	"github.com/mark3labs/mcp-go/client"
-	"github.com/mark3labs/mcp-go/client/transport"
-	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/amoylab/unla/internal/common/config"
 	"github.com/amoylab/unla/internal/template"
 	"github.com/amoylab/unla/pkg/mcp"
 	"github.com/amoylab/unla/pkg/version"
+	"github.com/mark3labs/mcp-go/client"
+	"github.com/mark3labs/mcp-go/client/transport"
+	mcpgo "github.com/mark3labs/mcp-go/mcp"
 )
 
 // StreamableTransport implements Transport using Streamable HTTP

@@ -99,18 +99,17 @@ type ArgConfig struct {
 }
 
 type ItemsConfig struct {
-	Type string   `json:"type"`
-	Enum []string `json:"enum,omitempty"`
+	Type       string         `json:"type"`
+	Enum       []string       `json:"enum,omitempty"`
 	Properties map[string]any `json:"properties,omitempty"`
 	Items      *ItemsConfig   `json:"items,omitempty"`
 	Required   []string       `json:"required,omitempty"`
 }
 
-
 type PromptConfig struct {
-	Name        string              `json:"name"`
-	Description string              `json:"description"`
-	Arguments   []PromptArgument    `json:"arguments"`
+	Name           string           `json:"name"`
+	Description    string           `json:"description"`
+	Arguments      []PromptArgument `json:"arguments"`
 	PromptResponse []PromptResponse `json:"promptResponse,omitempty"`
 }
 
@@ -269,8 +268,8 @@ func FromItemsConfig(cfg config.ItemsConfig) ItemsConfig {
 		items = &tmp
 	}
 	return ItemsConfig{
-		Type: cfg.Type,
-		Enum: cfg.Enum,
+		Type:       cfg.Type,
+		Enum:       cfg.Enum,
 		Properties: props,
 		Items:      items,
 		Required:   cfg.Required,
@@ -316,9 +315,9 @@ func FromPromptConfigs(cfgs []config.PromptConfig) []PromptConfig {
 	result := make([]PromptConfig, len(cfgs))
 	for i, cfg := range cfgs {
 		result[i] = PromptConfig{
-			Name:        cfg.Name,
-			Description: cfg.Description,
-			Arguments:   FromPromptArguments(cfg.Arguments),
+			Name:           cfg.Name,
+			Description:    cfg.Description,
+			Arguments:      FromPromptArguments(cfg.Arguments),
 			PromptResponse: FromPromptResponses(cfg.PromptResponse),
 		}
 	}

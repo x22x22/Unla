@@ -86,7 +86,7 @@ func FromMCPConfig(cfg *config.MCPConfig) (*MCPConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	mcpServers, err := json.Marshal(cfg.McpServers)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ type MCPConfigVersion struct {
 	Routers    string          `gorm:"type:text;column:routers"`
 	Servers    string          `gorm:"type:text;column:servers"`
 	Tools      string          `gorm:"type:text;column:tools"`
-	Prompts    string         `gorm:"type:text; column:prompts"`
+	Prompts    string          `gorm:"type:text; column:prompts"`
 	McpServers string          `gorm:"type:text;column:mcp_servers"`
 	Hash       string          `gorm:"column:hash;not null"` // hash of the configuration content
 	DeletedAt  gorm.DeletedAt  `gorm:"index"`
@@ -179,7 +179,7 @@ func (m *MCPConfigVersion) ToMCPConfig() (*config.MCPConfig, error) {
 		if err := json.Unmarshal([]byte(m.Prompts), &cfg.Prompts); err != nil {
 			return nil, err
 		}
-	}	
+	}
 	if len(m.McpServers) > 0 {
 		if err := json.Unmarshal([]byte(m.McpServers), &cfg.McpServers); err != nil {
 			return nil, err
@@ -203,7 +203,7 @@ func FromMCPConfigVersion(cfg *config.MCPConfig, version int, createdBy string, 
 	}
 	if cfg.Prompts == nil {
 		cfg.Prompts = []config.PromptConfig{}
-	}	
+	}
 	if cfg.McpServers == nil {
 		cfg.McpServers = []config.MCPServerConfig{}
 	}

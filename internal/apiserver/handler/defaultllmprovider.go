@@ -24,8 +24,8 @@ func (h *Chat) HandleDefaultLLMProviders(c *gin.Context) {
 			"model":   model,
 			"enabled": true,
 			"config": map[string]interface{}{ // Add default config values
-				"apiKey":     apiKey,
-				"baseURL":    baseURL,
+				"apiKey":  apiKey,
+				"baseURL": baseURL,
 			},
 			"models": []map[string]interface{}{{ // Add the default model
 				"id":       model,
@@ -33,10 +33,10 @@ func (h *Chat) HandleDefaultLLMProviders(c *gin.Context) {
 				"isCustom": true,
 			}},
 			"settings": map[string]interface{}{ // Only include essential settings
-				"showApiKey":        true,
-				"showBaseURL":       true,
-				"apiKeyRequired":    true,
-				"baseURLRequired":   true,
+				"showApiKey":      true,
+				"showBaseURL":     true,
+				"apiKeyRequired":  true,
+				"baseURLRequired": true,
 			},
 		}
 	}

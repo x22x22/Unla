@@ -2,11 +2,12 @@ package notifier
 
 import (
 	"context"
-	"github.com/amoylab/unla/internal/common/cnst"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/amoylab/unla/internal/common/cnst"
 
 	"github.com/amoylab/unla/internal/common/config"
 	"github.com/amoylab/unla/pkg/utils"

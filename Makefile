@@ -133,6 +133,7 @@ test:
 test-coverage:
 	go test $(TEST_FLAGS) -coverprofile=$(COVERAGE_FILE) $(TEST_PACKAGES)
 	go tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
+	go tool cover -func=$(COVERAGE_FILE)
 
 # Run tests with race detection
 test-race:

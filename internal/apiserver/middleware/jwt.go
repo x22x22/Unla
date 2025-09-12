@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/amoylab/unla/internal/auth/jwt"
+	"github.com/gin-gonic/gin"
 )
 
 // JWTAuthMiddleware creates a middleware that validates JWT tokens

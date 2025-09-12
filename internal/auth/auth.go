@@ -69,7 +69,7 @@ type ClientRegistrationResponse struct {
 
 type auth struct {
 	OAuth2
-	cfg config.AuthConfig
+	cfg         config.AuthConfig
 	googleOAuth *GoogleOAuth
 	githubOAuth *GitHubOAuth
 }
@@ -126,12 +126,12 @@ func (a *auth) GetGitHubOAuth() ExternalOAuth {
 
 // IsGoogleOAuthEnabled returns true if Google OAuth is enabled
 func (a *auth) IsGoogleOAuthEnabled() bool {
-	return a.cfg.Google != nil && a.googleOAuth != nil && 
-		   a.cfg.Google.ClientID != "" && a.cfg.Google.ClientSecret != ""
+	return a.cfg.Google != nil && a.googleOAuth != nil &&
+		a.cfg.Google.ClientID != "" && a.cfg.Google.ClientSecret != ""
 }
 
 // IsGitHubOAuthEnabled returns true if GitHub OAuth is enabled
 func (a *auth) IsGitHubOAuthEnabled() bool {
 	return a.cfg.GitHub != nil && a.githubOAuth != nil &&
-		   a.cfg.GitHub.ClientID != "" && a.cfg.GitHub.ClientSecret != ""
+		a.cfg.GitHub.ClientID != "" && a.cfg.GitHub.ClientSecret != ""
 }

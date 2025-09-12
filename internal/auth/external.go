@@ -65,7 +65,7 @@ func (g *GoogleOAuth) GetAuthURL(state string) string {
 	params.Set("response_type", "code")
 	params.Set("scope", "openid email profile")
 	params.Set("state", state)
-	
+
 	return "https://accounts.google.com/o/oauth2/v2/auth?" + params.Encode()
 }
 
@@ -78,7 +78,7 @@ func (g *GoogleOAuth) ExchangeCode(ctx context.Context, code string) (*ExternalT
 	data.Set("grant_type", "authorization_code")
 	data.Set("redirect_uri", g.redirectURI)
 
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://oauth2.googleapis.com/token", 
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://oauth2.googleapis.com/token",
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -95,7 +95,7 @@ func (g *GoogleOAuth) ExchangeCode(ctx context.Context, code string) (*ExternalT
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		g.logger.Error("Google token exchange failed", 
+		g.logger.Error("Google token exchange failed",
 			zap.Int("status_code", resp.StatusCode),
 			zap.String("response", string(body)))
 		return nil, fmt.Errorf("token exchange failed with status %d", resp.StatusCode)
@@ -111,7 +111,7 @@ func (g *GoogleOAuth) ExchangeCode(ctx context.Context, code string) (*ExternalT
 
 // GetUserInfo retrieves user information from Google
 func (g *GoogleOAuth) GetUserInfo(ctx context.Context, accessToken string) (*ExternalUserInfo, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", 
+	req, err := http.NewRequestWithContext(ctx, "GET",
 		"https://www.googleapis.com/oauth2/v2/userinfo", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -180,7 +180,7 @@ func (gh *GitHubOAuth) GetAuthURL(state string) string {
 	params.Set("response_type", "code")
 	params.Set("scope", "user:email")
 	params.Set("state", state)
-	
+
 	return "https://github.com/login/oauth/authorize?" + params.Encode()
 }
 
@@ -191,7 +191,7 @@ func (gh *GitHubOAuth) ExchangeCode(ctx context.Context, code string) (*External
 	data.Set("client_secret", gh.clientSecret)
 	data.Set("code", code)
 
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://github.com/login/oauth/access_token", 
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://github.com/login/oauth/access_token",
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -249,11 +249,11 @@ func (gh *GitHubOAuth) GetUserInfo(ctx context.Context, accessToken string) (*Ex
 	}
 
 	var githubUser struct {
-		ID       int    `json:"id"`
-		Login    string `json:"login"`
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Avatar   string `json:"avatar_url"`
+		ID     int    `json:"id"`
+		Login  string `json:"login"`
+		Name   string `json:"name"`
+		Email  string `json:"email"`
+		Avatar string `json:"avatar_url"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&githubUser); err != nil {

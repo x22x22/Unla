@@ -14,8 +14,8 @@ import (
 	"github.com/amoylab/unla/internal/auth/storage"
 	"github.com/amoylab/unla/internal/common/errorx"
 
-	"github.com/google/uuid"
 	"github.com/amoylab/unla/internal/common/config"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/sha3"
 )

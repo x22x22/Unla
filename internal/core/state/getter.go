@@ -11,8 +11,8 @@ func (s *State) getRuntime(prefix string) runtimeUnit {
 	runtime, ok := s.runtime[uriPrefix(prefix)]
 	if !ok {
 		return runtimeUnit{
-			tools:       make(map[toolName]*config.ToolConfig),
-			toolSchemas: make([]mcp.ToolSchema, 0),
+			tools:         make(map[toolName]*config.ToolConfig),
+			toolSchemas:   make([]mcp.ToolSchema, 0),
 			prompts:       make(map[promptName]*config.PromptConfig),
 			promptSchemas: make([]mcp.PromptSchema, 0),
 		}

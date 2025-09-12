@@ -16,7 +16,7 @@ const (
 	ToolsList               = "tools/list"
 	ToolsCall               = "tools/call"
 	PromptsList             = "prompts/list"
-	PromptsGet              = "prompts/get"		
+	PromptsGet              = "prompts/get"
 )
 
 // Response
