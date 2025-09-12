@@ -37,10 +37,12 @@ func (r *Renderer) Render(tmpl string, ctx *Context) (string, error) {
 	if !ok {
 		var err error
 		t, err = template.New(name).Funcs(template.FuncMap{
-			"env":      ctx.Env,
-			"add":      func(a, b int) int { return a + b },
-			"fromJSON": fromJSON,
-			"toJSON":   toJSON,
+			"env":       ctx.Env,
+			"add":       func(a, b int) int { return a + b },
+			"fromJSON":  fromJSON,
+			"toJSON":    toJSON,
+			"safeGet":   safeGet,
+			"safeGetOr": safeGetOr,
 		}).Parse(tmpl)
 		if err != nil {
 			return "", err
