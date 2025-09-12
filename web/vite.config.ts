@@ -11,6 +11,14 @@ export default defineConfig(({ mode }) => {
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, __dirname, '');
 
+  // Determine a safe proxy target for dev. If VITE_DEV_API_BASE_URL is
+  // missing or not an absolute URL, fall back to the local apiserver.
+  const devApiTarget = (() => {
+    const t = env.VITE_DEV_API_BASE_URL?.toString().trim();
+    if (t && /^https?:\/\//i.test(t)) return t;
+    return 'http://localhost:5234';
+  })();
+
   return {
     base: env.VITE_BASE_URL || '/',
     plugins: [react()],
@@ -34,7 +42,8 @@ export default defineConfig(({ mode }) => {
       allowedHosts: true,
       proxy: {
         '/api': {
-          target: env.VITE_DEV_API_BASE_URL || '/api',
+          // Must be an absolute URL for http-proxy
+          target: devApiTarget,
           changeOrigin: true,
         }
       },
