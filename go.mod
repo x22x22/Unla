@@ -23,8 +23,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/driver/postgres v1.5.7
-	gorm.io/gorm v1.25.12
+	gorm.io/driver/sqlite v1.6.0
+	gorm.io/gorm v1.30.0
 )
+
+require github.com/mattn/go-sqlite3 v1.14.22 // indirect
 
 require (
 	github.com/bytedance/sonic v1.13.2 // indirect

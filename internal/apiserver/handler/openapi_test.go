@@ -82,15 +82,17 @@ func (s *storeMock) ListVersions(context.Context, string, string) ([]*config.MCP
 func (s *storeMock) DeleteVersion(context.Context, string, string, int) error    { return nil }
 func (s *storeMock) SetActiveVersion(context.Context, string, string, int) error { return nil }
 
-type notifierMock struct{ called bool }
+type openapiNotifierMock struct{ called bool }
 
-func (n *notifierMock) Watch(context.Context) (<-chan *config.MCPConfig, error) { return nil, nil }
-func (n *notifierMock) NotifyUpdate(context.Context, *config.MCPConfig) error {
+func (n *openapiNotifierMock) Watch(context.Context) (<-chan *config.MCPConfig, error) {
+	return nil, nil
+}
+func (n *openapiNotifierMock) NotifyUpdate(context.Context, *config.MCPConfig) error {
 	n.called = true
 	return nil
 }
-func (n *notifierMock) CanReceive() bool { return false }
-func (n *notifierMock) CanSend() bool    { return true }
+func (n *openapiNotifierMock) CanReceive() bool { return false }
+func (n *openapiNotifierMock) CanSend() bool    { return true }
 
 func newMultipart(t *testing.T, field, filename, content string) (*bytes.Buffer, string) {
 	t.Helper()
@@ -115,7 +117,7 @@ func TestOpenAPI_HandleImport_Success(t *testing.T) {
 	r := gin.New()
 	db := &dbMock{}
 	st := &storeMock{}
-	nt := &notifierMock{}
+	nt := &openapiNotifierMock{}
 	h := NewOpenAPI(db, st, nt, zap.NewNop())
 	r.POST("/import", func(c *gin.Context) {
 		// inject claims
@@ -139,7 +141,7 @@ func TestOpenAPI_HandleImport_MissingClaims(t *testing.T) {
 	spec := "openapi: 3.0.0\ninfo:\n  title: T\n  version: '1'\npaths:\n  /ping:\n    get:\n      responses:\n        '200':\n          description: ok\n"
 	body, ctype := newMultipart(t, "file", "spec.yaml", spec)
 	r := gin.New()
-	h := NewOpenAPI(&dbMock{}, &storeMock{}, &notifierMock{}, zap.NewNop())
+	h := NewOpenAPI(&dbMock{}, &storeMock{}, &openapiNotifierMock{}, zap.NewNop())
 	r.POST("/import", h.HandleImport)
 	req := httptest.NewRequest("POST", "/import", body)
 	req.Header.Set("Content-Type", ctype)
@@ -151,7 +153,7 @@ func TestOpenAPI_HandleImport_MissingClaims(t *testing.T) {
 func TestOpenAPI_HandleImport_MissingFile(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	h := NewOpenAPI(&dbMock{}, &storeMock{}, &notifierMock{}, zap.NewNop())
+	h := NewOpenAPI(&dbMock{}, &storeMock{}, &openapiNotifierMock{}, zap.NewNop())
 	r.POST("/import", h.HandleImport)
 	req := httptest.NewRequest("POST", "/import", nil)
 	w := httptest.NewRecorder()
