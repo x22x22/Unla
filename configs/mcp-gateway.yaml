@@ -28,19 +28,19 @@ tracing:
   headers: {}                                         # optional exporter headers
   capture:
     downstream_error:
-      enabled: ${TRACE_ERR_BODY_ENABLED:false}
-      max_body_length: ${TRACE_ERR_BODY_MAX_LEN:256}
+      enabled: ${TRACING_ERR_BODY_ENABLED:false}
+      max_body_length: ${TRACING_ERR_BODY_MAX_LEN:256}
     # NOTE: The following downstream_request capture settings are GLOBAL and affect all routes/prefixes.
     # Use with extreme caution to avoid leaking sensitive information into tracing systems.
     # Collect only what is necessary for debugging/observability.
     downstream_request:
-      enabled: ${TRACE_REQ_ARGS_ENABLED:false}
+      enabled: ${TRACING_REQ_ARGS_ENABLED:false}
       # WARNING: Capturing request body may expose secrets (tokens, passwords, PII).
       # Do NOT enable globally unless strictly necessary, and prefer
       # selective, minimal sampling in controlled environments.
-      body_enabled: ${TRACE_REQ_BODY_ENABLED:false}
-      body_max_length: ${TRACE_REQ_BODY_MAX_LEN:256}
-      max_field_length: ${TRACE_REQ_ARG_MAX_LEN:256}
+      body_enabled: ${TRACING_REQ_BODY_ENABLED:false}
+      body_max_length: ${TRACING_REQ_BODY_MAX_LEN:256}
+      max_field_length: ${TRACING_REQ_ARG_MAX_LEN:256}
       include_fields: {}
 
 # Storage configuration
