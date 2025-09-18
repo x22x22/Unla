@@ -41,7 +41,7 @@ tracing:
       body_enabled: ${TRACING_REQ_BODY_ENABLED:false}
       body_max_length: ${TRACING_REQ_BODY_MAX_LEN:256}
       max_field_length: ${TRACING_REQ_ARG_MAX_LEN:256}
-      include_fields: {}
+      include_fields: "${TRACING_INCLUDE_FIELDS:}"
 
 # Storage configuration
 storage:

@@ -2,7 +2,9 @@ package trace
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -15,6 +17,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 // Config represents OpenTelemetry/Jaeger tracing configuration
@@ -37,12 +40,66 @@ type CaptureConfig struct {
 		MaxBodyLength int  `yaml:"max_body_length"`
 	} `yaml:"downstream_error"`
 	DownstreamRequest struct {
-		Enabled        bool              `yaml:"enabled"`
-		IncludeFields  map[string]string `yaml:"include_fields"`
-		MaxFieldLength int               `yaml:"max_field_length"`
-		BodyEnabled    bool              `yaml:"body_enabled"`
-		BodyMaxLength  int               `yaml:"body_max_length"`
+		Enabled        bool      `yaml:"enabled"`
+		IncludeFields  StringMap `yaml:"include_fields"`
+		MaxFieldLength int       `yaml:"max_field_length"`
+		BodyEnabled    bool      `yaml:"body_enabled"`
+		BodyMaxLength  int       `yaml:"body_max_length"`
 	} `yaml:"downstream_request"`
+}
+
+// StringMap is a generic map[string]string type that supports:
+// 1. YAML maps
+// 2. JSON strings
+// 3. CSV strings like "k1=v1,k2=v2"
+type StringMap map[string]string
+
+func (m *StringMap) UnmarshalYAML(value *yaml.Node) error {
+
+	// 1. Try to decode as plain string
+	var raw string
+	if err := value.Decode(&raw); err == nil {
+		raw = strings.TrimSpace(raw)
+		if raw == "" {
+			*m = make(map[string]string)
+			return nil
+		}
+
+		// 2. Try JSON string
+		if strings.HasPrefix(raw, "{") {
+			var tmp map[string]string
+			if err := json.Unmarshal([]byte(raw), &tmp); err == nil {
+				*m = tmp
+				return nil
+			} else {
+			}
+		}
+
+		// 3. Try CSV format: key1=value1,key2=value2
+		tmp := make(map[string]string)
+		pairs := strings.Split(raw, ",")
+		for _, p := range pairs {
+			kv := strings.SplitN(strings.TrimSpace(p), "=", 2)
+			if len(kv) == 2 {
+				tmp[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+			} else {
+			}
+		}
+		*m = tmp
+		return nil
+	}
+
+	// 4. Fallback: decode as YAML map and convert values to string
+	tmp := make(map[string]interface{})
+	if err := value.Decode(&tmp); err != nil {
+		return err
+	}
+	res := make(map[string]string, len(tmp))
+	for k, v := range tmp {
+		res[k] = fmt.Sprintf("%v", v)
+	}
+	*m = res
+	return nil
 }
 
 // InitTracing initializes OpenTelemetry tracing and returns a shutdown func
