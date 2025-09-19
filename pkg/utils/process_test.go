@@ -60,4 +60,12 @@ func TestProcessFunctions(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to send signal")
 	})
+
+	t.Run("SendSignalToPIDFile success with current PID and signal 0", func(t *testing.T) {
+		pid := os.Getpid()
+		require.NoError(t, os.WriteFile(pidFile, []byte(strconv.Itoa(pid)), 0644))
+		// signal 0 should perform an existence check and succeed for current process
+		err := SendSignalToPIDFile(pidFile, unix.Signal(0))
+		assert.NoError(t, err)
+	})
 }

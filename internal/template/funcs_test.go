@@ -41,15 +41,38 @@ func TestSafeGetAndSafeGetOr(t *testing.T) {
 		"Iface": any(&user{Name: "C", Age: 50}),
 	}
 
+	// Map keys containing dashes should be retrievable via safeGet
+	nested["a-b"] = "dash-top"
+	nested["m"] = map[string]any{"a-b": "dash-nested"}
+
 	assert.Equal(t, "Ada", safeGet("User.Name", nested))
 	assert.Equal(t, "T2", safeGet("Items.1.Title", nested))
 	assert.Equal(t, "Bob", safeGet("Ptr.Name", nested))
 	assert.Equal(t, "C", safeGet("Iface.Name", nested))
+	assert.Equal(t, "dash-top", safeGet("a-b", nested))
+	assert.Equal(t, "dash-nested", safeGet("m.a-b", nested))
 
 	// Missing paths -> nil
 	assert.Nil(t, safeGet("User.Unknown", nested))
 	assert.Nil(t, safeGet("Items.99.Title", nested))
+	assert.Nil(t, safeGet("a-b.missing", nested))
 
 	// Default fallback
 	assert.Equal(t, "anon", safeGetOr("User.Unknown", nested, "anon"))
+	assert.Equal(t, "def", safeGetOr("a-b.missing", nested, "def"))
+}
+
+func TestDefaultTemplateSyntaxFailsWithDashKeyButSafeGetWorks(t *testing.T) {
+	ctx := NewContext()
+	ctx.Args["a-b"] = "works"
+
+	// Default dot syntax with dash in key is parsed as subtraction and fails
+	out, err := RenderTemplate("{{ .Args.a-b }}", ctx)
+	assert.Error(t, err)
+	assert.Empty(t, out)
+
+	// safeGet can access keys containing dashes
+	out2, err2 := RenderTemplate("{{ safeGet \"Args.a-b\" . }}", ctx)
+	assert.NoError(t, err2)
+	assert.Equal(t, "works", out2)
 }

@@ -344,9 +344,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 			attribute.String(cnst.AttrHTTPRespType, resp.Header.Get("Content-Type")),
 			attribute.Int(cnst.AttrHTTPRespSize, len(respBodyBytes)),
 		)
-		if maxLen > 0 {
-			scope.Span.SetAttributes(attribute.String(cnst.AttrHTTPErrorPreview, preview))
-		}
+		scope.Span.SetAttributes(attribute.String(cnst.AttrHTTPErrorPreview, preview))
 		scope.Span.AddEvent("http.error_response")
 	}
 

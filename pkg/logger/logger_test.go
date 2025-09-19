@@ -65,3 +65,29 @@ func TestSetDefaultsAndEncoderAndNewLogger(t *testing.T) {
 	// time formatting path does not panic
 	_ = getEncoder(cfg2)
 }
+
+func TestNewLogger_FileWithStacktrace(t *testing.T) {
+	tmp := t.TempDir()
+	cfg := &config.LoggerConfig{
+		Output:     "file",
+		FilePath:   filepath.Join(tmp, "app.log"),
+		Format:     "console",
+		Color:      true,
+		Stacktrace: true,
+		Level:      "debug",
+		TimeZone:   "UTC",
+	}
+	setLoggerDefaults(cfg)
+
+	lg, err := NewLogger(cfg)
+	assert.NoError(t, err)
+	assert.NotNil(t, lg)
+
+	// emit a couple of logs to exercise the core paths
+	lg.Debug("debug message")
+	lg.Error("error message")
+
+	// ensure file path directory exists (created by NewLogger)
+	_, err = os.Stat(filepath.Dir(cfg.FilePath))
+	assert.NoError(t, err)
+}

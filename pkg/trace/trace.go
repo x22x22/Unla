@@ -119,6 +119,17 @@ func InitTracing(ctx context.Context, cfg *Config, lg *zap.Logger) (func(context
 		}
 	}
 
+	// Normalize endpoint: strip http/https scheme if present, since exporters
+	// expect plain host[:port] and infer scheme from options (e.g. Insecure).
+	endpoint = strings.TrimSpace(endpoint)
+	if strings.HasPrefix(endpoint, "http://") {
+		endpoint = strings.TrimPrefix(endpoint, "http://")
+	} else if strings.HasPrefix(endpoint, "https://") {
+		endpoint = strings.TrimPrefix(endpoint, "https://")
+	}
+	// Avoid a trailing slash which some users may include.
+	endpoint = strings.TrimSuffix(endpoint, "/")
+
 	// Resource with service metadata
 	res, err := resource.New(ctx,
 		resource.WithFromEnv(),
