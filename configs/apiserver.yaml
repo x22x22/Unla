@@ -61,7 +61,10 @@ notifier:
 
   # Redis configuration (only used when type is redis)
   redis:
+    cluster_type: "${APISERVER_NOTIFIER_REDIS_CLUSTER_TYPE:single}"
     addr: "${APISERVER_NOTIFIER_REDIS_ADDR:localhost:6379}"
+    master_name: "${APISERVER_NOTIFIER_REDIS_MASTER_NAME:}"
+    username: "${APISERVER_NOTIFIER_REDIS_USERNAME:}"
     password: "${APISERVER_NOTIFIER_REDIS_PASSWORD:UseStrongPasswordIsAGoodPractice}"
     db: ${APISERVER_NOTIFIER_REDIS_DB:0}
     topic: "${APISERVER_NOTIFIER_REDIS_TOPIC:mcp-gateway:reload}"
