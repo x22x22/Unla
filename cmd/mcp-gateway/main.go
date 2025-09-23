@@ -168,7 +168,7 @@ func run() {
 	}
 
 	// Initialize session store
-	sessionStore, err := session.NewStore(logger, &cfg.Session)
+	sessionStore, err := session.NewStore(ctx, logger, &cfg.Session)
 	if err != nil {
 		logger.Fatal("failed to initialize session store",
 			zap.String("type", cfg.Session.Type),

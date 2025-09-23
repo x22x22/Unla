@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -19,13 +20,13 @@ const (
 )
 
 // NewStore creates a new session store based on configuration
-func NewStore(logger *zap.Logger, cfg *config.SessionConfig) (Store, error) {
+func NewStore(ctx context.Context, logger *zap.Logger, cfg *config.SessionConfig) (Store, error) {
 	logger.Info("Initializing session store", zap.String("type", cfg.Type))
 	switch Type(cfg.Type) {
 	case TypeMemory:
 		return NewMemoryStore(logger), nil
 	case TypeRedis:
-		return NewRedisStore(logger, cfg.Redis)
+		return NewRedisStore(ctx, logger, cfg.Redis)
 	default:
 		return nil, fmt.Errorf("unsupported session store type: %s", cfg.Type)
 	}

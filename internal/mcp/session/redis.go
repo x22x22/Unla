@@ -16,24 +16,23 @@ import (
 	"go.uber.org/zap"
 )
 
-// RedisStore implements Store using Redis
+// RedisStore implements Store using Redis streams
 type RedisStore struct {
 	logger *zap.Logger
 	client redis.UniversalClient
 	prefix string
 	topic  string
-	pubsub *redis.PubSub
 	// Add a map to track active connections
 	connections map[string]*RedisConnection
 	mu          sync.RWMutex
 	ttl         time.Duration // TTL for session data
+	streamCtx   context.Context
 }
 
 var _ Store = (*RedisStore)(nil)
 
 // NewRedisStore creates a new Redis-based session store
-// func NewRedisStore(logger *zap.Logger, addr, username, password string, db int, topic string) (*RedisStore, error) {
-func NewRedisStore(logger *zap.Logger, cfg config.SessionRedisConfig) (*RedisStore, error) {
+func NewRedisStore(ctx context.Context, logger *zap.Logger, cfg config.SessionRedisConfig) (*RedisStore, error) {
 	addrs := utils.SplitByMultipleDelimiters(cfg.Addr, ";", ",")
 	redisOptions := &redis.UniversalOptions{
 		Addrs:    addrs,
@@ -61,36 +60,73 @@ func NewRedisStore(logger *zap.Logger, cfg config.SessionRedisConfig) (*RedisSto
 	} else {
 		prefix = prefix + ":"
 	}
+
 	store := &RedisStore{
 		logger:      logger.Named("session.store.redis"),
 		client:      client,
-		prefix:      cfg.Prefix,
+		prefix:      prefix,
 		topic:       cfg.Topic,
 		connections: make(map[string]*RedisConnection),
 		ttl:         cfg.TTL,
+		streamCtx:   ctx,
 	}
 
-	// Subscribe to session updates
-	store.pubsub = client.Subscribe(context.Background(), cfg.Topic)
+	// Start handling session updates via streams
 	go store.handleUpdates()
 
 	return store, nil
 }
 
-// handleUpdates handles session update notifications
+// handleUpdates handles session update notifications via streams
 func (s *RedisStore) handleUpdates() {
-	ch := s.pubsub.Channel()
-	for msg := range ch {
-		var update struct {
-			Action  string   `json:"action"` // "create", "update", "delete", "event"
-			Meta    *Meta    `json:"meta"`
-			Message *Message `json:"message,omitempty"`
+	// Start from the latest message ($ means read only new messages)
+	lastID := "$"
+
+	for {
+		select {
+		case <-s.streamCtx.Done():
+			return
+		default:
+			// Use XREAD instead of XREADGROUP to ensure all instances get messages
+			// Each instance will read from the latest position independently
+			streams, err := s.client.XRead(s.streamCtx, &redis.XReadArgs{
+				Streams: []string{s.topic, lastID},
+				Count:   1,
+				Block:   1 * time.Second,
+			}).Result()
+
+			if err != nil {
+				if !errors.Is(err, redis.Nil) {
+					s.logger.Error("failed to read from stream", zap.Error(err))
+				}
+				continue
+			}
+
+			for _, stream := range streams {
+				for _, message := range stream.Messages {
+					// Update lastID to the current message ID for next read
+					lastID = message.ID
+
+					s.processSessionMessage(message)
+				}
+			}
 		}
-		if err := json.Unmarshal([]byte(msg.Payload), &update); err != nil {
+	}
+}
+
+// processSessionMessage processes a single session stream message
+func (s *RedisStore) processSessionMessage(message redis.XMessage) {
+	var update struct {
+		Action  string   `json:"action"` // "create", "update", "delete", "event"
+		Meta    *Meta    `json:"meta"`
+		Message *Message `json:"message,omitempty"`
+	}
+
+	if configData, exists := message.Values["config"]; exists {
+		if err := json.Unmarshal([]byte(configData.(string)), &update); err != nil {
 			s.logger.Error("failed to unmarshal session update",
-				zap.Error(err),
-				zap.String("payload", msg.Payload))
-			continue
+				zap.Error(err))
+			return
 		}
 
 		// Update local cache if needed
@@ -130,7 +166,7 @@ func (s *RedisStore) handleUpdates() {
 	}
 }
 
-// publishUpdate publishes a session update to the topic
+// publishUpdate publishes a session update to the stream
 func (s *RedisStore) publishUpdate(ctx context.Context, action string, meta *Meta, msg *Message) error {
 	update := struct {
 		Action  string   `json:"action"`
@@ -147,7 +183,22 @@ func (s *RedisStore) publishUpdate(ctx context.Context, action string, meta *Met
 		return fmt.Errorf("failed to marshal session update: %w", err)
 	}
 
-	return s.client.Publish(ctx, s.topic, data).Err()
+	// Add message to stream with MAXLEN 1 to keep only the latest message
+	_, err = s.client.XAdd(ctx, &redis.XAddArgs{
+		Stream: s.topic,
+		MaxLen: 1,     // Keep only the latest message
+		Approx: false, // Exact length limit
+		Values: map[string]interface{}{
+			"config":    string(data),
+			"timestamp": time.Now().Unix(),
+		},
+	}).Result()
+
+	if err != nil {
+		return fmt.Errorf("failed to add session update to stream: %w", err)
+	}
+
+	return nil
 }
 
 // Register implements Store.Register
@@ -306,11 +357,6 @@ func (s *RedisStore) List(ctx context.Context) ([]Connection, error) {
 
 // Close closes the Redis store
 func (s *RedisStore) Close() error {
-	if s.pubsub != nil {
-		if err := s.pubsub.Close(); err != nil {
-			return fmt.Errorf("failed to close pubsub: %w", err)
-		}
-	}
 	return s.client.Close()
 }
 
