@@ -170,3 +170,4 @@ func TestPrepareRequest(t *testing.T) {
 	// rendered body is returned for tracing capture
 	assert.Equal(t, `{"a": "V"}`, rendered)
 }
+

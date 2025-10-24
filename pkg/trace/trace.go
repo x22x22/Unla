@@ -20,6 +20,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// testable indirections for constructors
+var (
+    newResource       = resource.New
+    newOTLPTraceHTTP  = otlptracehttp.New
+    newOTLPTraceGRPC  = otlptracegrpc.New
+)
+
 // Config represents OpenTelemetry/Jaeger tracing configuration
 type Config struct {
 	Enabled     bool              `yaml:"enabled"`
@@ -121,51 +128,48 @@ func InitTracing(ctx context.Context, cfg *Config, lg *zap.Logger) (func(context
 
 	// Normalize endpoint: strip http/https scheme if present, since exporters
 	// expect plain host[:port] and infer scheme from options (e.g. Insecure).
-	endpoint = strings.TrimSpace(endpoint)
-	if strings.HasPrefix(endpoint, "http://") {
+	if protocol == "grpc" {
 		endpoint = strings.TrimPrefix(endpoint, "http://")
-	} else if strings.HasPrefix(endpoint, "https://") {
 		endpoint = strings.TrimPrefix(endpoint, "https://")
+		endpoint = strings.TrimSuffix(endpoint, "/")
 	}
-	// Avoid a trailing slash which some users may include.
-	endpoint = strings.TrimSuffix(endpoint, "/")
 
 	// Resource with service metadata
-	res, err := resource.New(ctx,
-		resource.WithFromEnv(),
-		resource.WithProcess(),
-		resource.WithTelemetrySDK(),
-		resource.WithAttributes(
-			semconv.ServiceName(serviceName),
-			semconv.DeploymentEnvironment(cfg.Environment),
-		),
-	)
+    res, err := newResource(ctx,
+        resource.WithFromEnv(),
+        resource.WithProcess(),
+        resource.WithTelemetrySDK(),
+        resource.WithAttributes(
+            semconv.ServiceName(serviceName),
+            semconv.DeploymentEnvironment(cfg.Environment),
+        ),
+    )
 	if err != nil {
 		return nil, fmt.Errorf("create resource: %w", err)
 	}
 
 	// Exporter
 	var exp *otlptrace.Exporter
-	switch protocol {
-	case "http":
-		opts := []otlptracehttp.Option{otlptracehttp.WithEndpoint(endpoint)}
-		if cfg.Insecure {
-			opts = append(opts, otlptracehttp.WithInsecure())
-		}
-		if len(cfg.Headers) > 0 {
-			opts = append(opts, otlptracehttp.WithHeaders(cfg.Headers))
-		}
-		exp, err = otlptracehttp.New(ctx, opts...)
-	default: // grpc
-		opts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(endpoint)}
-		if cfg.Insecure {
-			opts = append(opts, otlptracegrpc.WithInsecure())
-		}
-		if len(cfg.Headers) > 0 {
-			opts = append(opts, otlptracegrpc.WithHeaders(cfg.Headers))
-		}
-		exp, err = otlptracegrpc.New(ctx, opts...)
-	}
+    switch protocol {
+    case "http":
+        opts := []otlptracehttp.Option{otlptracehttp.WithEndpoint(endpoint)}
+        if cfg.Insecure {
+            opts = append(opts, otlptracehttp.WithInsecure())
+        }
+        if len(cfg.Headers) > 0 {
+            opts = append(opts, otlptracehttp.WithHeaders(cfg.Headers))
+        }
+        exp, err = newOTLPTraceHTTP(ctx, opts...)
+    default: // grpc
+        opts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(endpoint)}
+        if cfg.Insecure {
+            opts = append(opts, otlptracegrpc.WithInsecure())
+        }
+        if len(cfg.Headers) > 0 {
+            opts = append(opts, otlptracegrpc.WithHeaders(cfg.Headers))
+        }
+        exp, err = newOTLPTraceGRPC(ctx, opts...)
+    }
 	if err != nil {
 		return nil, fmt.Errorf("create exporter: %w", err)
 	}

@@ -92,3 +92,26 @@ func TestLoggerMiddlewareSetsLogger(t *testing.T) {
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/x", nil))
 	assert.Equal(t, 200, w.Code)
 }
+
+func TestEnableTracing(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// Test with valid server
+	s := &Server{
+		logger: zap.NewNop(),
+		router: gin.New(),
+	}
+	s.EnableTracing("test-service")
+	// Should not panic and middleware should be added
+	assert.NotNil(t, s.router)
+
+	// Test with nil server
+	var nilServer *Server
+	nilServer.EnableTracing("test")
+	// Should not panic
+
+	// Test with server but nil router
+	s2 := &Server{logger: zap.NewNop()}
+	s2.EnableTracing("test")
+	// Should not panic
+}

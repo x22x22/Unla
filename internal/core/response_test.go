@@ -108,3 +108,18 @@ func TestSendToolExecutionError_HTTP(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "event: message")
 }
+
+func TestSendAcceptedResponse(t *testing.T) {
+	s := &Server{logger: zap.NewNop()}
+	c, w := newGin()
+
+	// Test without logger in context
+	s.sendAcceptedResponse(c)
+	assert.Equal(t, http.StatusAccepted, w.Code)
+
+	// Test with logger in context
+	c2, w2 := newGin()
+	c2.Set("logger", zap.NewNop())
+	s.sendAcceptedResponse(c2)
+	assert.Equal(t, http.StatusAccepted, w2.Code)
+}

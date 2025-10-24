@@ -32,3 +32,21 @@ func TestNewTransportVariantsAndUnknown(t *testing.T) {
 	_, err = NewTransport(config.MCPServerConfig{Type: "unknown"})
 	assert.Error(t, err)
 }
+
+func TestTransportTypes(t *testing.T) {
+	// Test that transport type constants have expected values
+	assert.Equal(t, TransportType("sse"), TypeSSE)
+	assert.Equal(t, TransportType("stdio"), TypeStdio)
+	assert.Equal(t, TransportType("streamable-http"), TypeStreamable)
+
+	// Test type conversion
+	assert.Equal(t, string(TypeSSE), "sse")
+	assert.Equal(t, string(TypeStdio), "stdio")
+	assert.Equal(t, string(TypeStreamable), "streamable-http")
+}
+
+func TestNewTransport_ErrorMessage(t *testing.T) {
+	_, err := NewTransport(config.MCPServerConfig{Type: "invalid-type"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown transport type: invalid-type")
+}
