@@ -123,7 +123,7 @@ ali: build
 	docker push $(ALI_REGISTRY)/$(PROJECT_NAME)/allinone:$(IMAGE_TAG)
 
 # Test targets
-.PHONY: test test-coverage test-race
+.PHONY: test test-coverage test-race template-tester
 
 # Run all tests
 test:
@@ -138,6 +138,10 @@ test-coverage:
 # Run tests with race detection
 test-race:
 	go test $(TEST_FLAGS) -race $(TEST_PACKAGES)
+
+# Build template tester CLI tool
+template-tester:
+	go build -o bin/template-tester cmd/template-tester/main.go
 
 # Clean up test artifacts
 clean-test:

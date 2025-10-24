@@ -95,3 +95,68 @@ func TestAssembleTemplateContext(t *testing.T) {
 	assert.Equal(t, 1, ctx.Args["a"]) // AssembleTemplateContext preserves int as-is
 	assert.Equal(t, "v-cv-1", ctx.Config["x"])
 }
+
+func TestSprigMustFromJsonWithNestedArrays(t *testing.T) {
+	ctx := NewContext()
+
+	// Simulate stock data response (nested arrays like from Tushare API)
+	stockDataJSON := `[["600519.SH","20251023",1455.0,1468.8,1447.2,1467.98],["600519.SH","20251022",1462.08,1465.73,1456.0,1458.7]]`
+	ctx.Response.Data = map[string]any{
+		"data": map[string]any{
+			"items": stockDataJSON, // JSON string after preprocessResponseData
+		},
+	}
+
+	// Template using mustFromJson to parse nested arrays
+	tmpl := `{{- $data := safeGet "data" .Response.Data -}}
+{{- $items := mustFromJson $data.items -}}
+{{- range $items -}}
+Code: {{ index . 0 }}, Date: {{ index . 1 }}, Open: {{ index . 2 }}
+{{ end -}}`
+
+	out, err := RenderTemplate(tmpl, ctx)
+	assert.NoError(t, err)
+	assert.Contains(t, out, "Code: 600519.SH, Date: 20251023, Open: 1455")
+	assert.Contains(t, out, "Code: 600519.SH, Date: 20251022, Open: 1462.08")
+}
+
+func TestSprigFunctionsAvailable(t *testing.T) {
+	ctx := NewContext()
+	ctx.Args["name"] = "world"
+
+	// Test some common sprig functions
+	tests := []struct {
+		name     string
+		template string
+		expected string
+	}{
+		{
+			name:     "upper function",
+			template: `{{ .Args.name | upper }}`,
+			expected: "WORLD",
+		},
+		{
+			name:     "lower function",
+			template: `{{ "HELLO" | lower }}`,
+			expected: "hello",
+		},
+		{
+			name:     "trim function",
+			template: `{{ "  hello  " | trim }}`,
+			expected: "hello",
+		},
+		{
+			name:     "default function",
+			template: `{{ .Args.missing | default "fallback" }}`,
+			expected: "fallback",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := RenderTemplate(tt.template, ctx)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, out)
+		})
+	}
+}

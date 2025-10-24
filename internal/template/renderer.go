@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/amoylab/unla/internal/mcp/session"
 )
 
@@ -36,14 +37,16 @@ func (r *Renderer) Render(tmpl string, ctx *Context) (string, error) {
 	t, ok := r.templates[name]
 	if !ok {
 		var err error
-		t, err = template.New(name).Funcs(template.FuncMap{
-			"env":       ctx.Env,
-			"add":       func(a, b int) int { return a + b },
-			"fromJSON":  fromJSON,
-			"toJSON":    toJSON,
-			"safeGet":   safeGet,
-			"safeGetOr": safeGetOr,
-		}).Parse(tmpl)
+		// Start with sprig functions
+		funcMap := sprig.TxtFuncMap()
+		// Add/override with custom functions
+		funcMap["env"] = ctx.Env
+		funcMap["fromJSON"] = fromJSON
+		funcMap["toJSON"] = toJSON
+		funcMap["safeGet"] = safeGet
+		funcMap["safeGetOr"] = safeGetOr
+
+		t, err = template.New(name).Funcs(funcMap).Parse(tmpl)
 		if err != nil {
 			return "", err
 		}
