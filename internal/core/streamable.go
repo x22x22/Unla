@@ -292,7 +292,11 @@ func (s *Server) handleMCPRequest(c *gin.Context, req mcp.JSONRPCRequest, conn s
 		)
 		switch protoType {
 		case cnst.BackendProtoHttp:
-			result = s.callHTTPTool(c, req, conn, params)
+			result = s.callHTTPTool(c, req, conn, params, false)
+			if result == nil {
+				// Error already handled by callHTTPTool
+				return
+			}
 		case cnst.BackendProtoStdio, cnst.BackendProtoSSE, cnst.BackendProtoStreamable:
 			transport := s.state.GetTransport(conn.Meta().Prefix)
 			if transport == nil {

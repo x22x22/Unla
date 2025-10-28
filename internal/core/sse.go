@@ -430,7 +430,11 @@ func (s *Server) handlePostMessage(c *gin.Context, conn session.Connection) {
 		)
 		switch protoType {
 		case cnst.BackendProtoHttp:
-			result = s.callHTTPTool(c, req, conn, params)
+			result = s.callHTTPTool(c, req, conn, params, true)
+			if result == nil {
+				// Error already handled by callHTTPTool
+				return
+			}
 		case cnst.BackendProtoStdio, cnst.BackendProtoSSE, cnst.BackendProtoStreamable:
 			transport := s.state.GetTransport(conn.Meta().Prefix)
 			if transport == nil {

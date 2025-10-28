@@ -426,7 +426,7 @@ func (s *Server) fetchHTTPToolList(conn session.Connection) ([]mcp.ToolSchema, e
 	return tools, nil
 }
 
-func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn session.Connection, params mcp.CallToolParams) *mcp.CallToolResult {
+func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn session.Connection, params mcp.CallToolParams, isSSE bool) *mcp.CallToolResult {
 	// Log tool invocation at info level
 	s.logger.Info("invoking HTTP tool",
 		zap.String("tool", params.Name),
@@ -482,7 +482,7 @@ func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn sessi
 			zap.String("tool", params.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Error(err))
-		s.sendToolExecutionError(c, conn, req, err, true)
+		s.sendToolExecutionError(c, conn, req, err, isSSE)
 		return nil
 	}
 
