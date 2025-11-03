@@ -42,6 +42,7 @@ const (
 	AttrHTTPRespType        = "http.response.content_type"
 	AttrHTTPRespSize        = "http.response.size"
 	AttrHTTPErrorPreview    = "http.response.error_preview"
+	AttrHTTPRespBody        = "http.response.body"
 	AttrDownstreamArgPrefix = "downstream.arg."
 	AttrDownstreamReqBody   = "downstream.request.body"
 )

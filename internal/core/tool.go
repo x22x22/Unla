@@ -243,9 +243,6 @@ func (s *Server) executeHTTPTool(c *gin.Context, conn session.Connection, tool *
 	if s.traceCapture.DownstreamRequest.Enabled {
 		include := s.traceCapture.DownstreamRequest.IncludeFields
 		maxLen := s.traceCapture.DownstreamRequest.MaxFieldLength
-		if maxLen <= 0 {
-			maxLen = 256
-		}
 		if len(include) > 0 {
 			for k, tmpl := range include {
 				rendered, err := template.RenderTemplate(tmpl, tmplCtx)
@@ -253,7 +250,7 @@ func (s *Server) executeHTTPTool(c *gin.Context, conn session.Connection, tool *
 					// Skip invalid templates silently to avoid breaking requests
 					continue
 				}
-				if len(rendered) > maxLen {
+				if maxLen > 0 && len(rendered) > maxLen {
 					rendered = rendered[:maxLen]
 				}
 				scope.Span.SetAttributes(attribute.String(cnst.AttrDownstreamArgPrefix+k, rendered))
@@ -262,11 +259,8 @@ func (s *Server) executeHTTPTool(c *gin.Context, conn session.Connection, tool *
 		// Optionally capture downstream request body content (rendered)
 		if s.traceCapture.DownstreamRequest.BodyEnabled && renderedBody != "" {
 			bMax := s.traceCapture.DownstreamRequest.BodyMaxLength
-			if bMax <= 0 {
-				bMax = 256
-			}
 			bodyPreview := renderedBody
-			if len(bodyPreview) > bMax {
+			if bMax > 0 && len(bodyPreview) > bMax {
 				bodyPreview = bodyPreview[:bMax]
 			}
 			scope.Span.SetAttributes(attribute.String(cnst.AttrDownstreamReqBody, bodyPreview))
@@ -335,11 +329,8 @@ func (s *Server) executeHTTPTool(c *gin.Context, conn session.Connection, tool *
 	// If downstream response indicates error, annotate the span with concise details per config
 	if resp.StatusCode >= 400 && s.traceCapture.DownstreamError.Enabled {
 		maxLen := s.traceCapture.DownstreamError.MaxBodyLength
-		if maxLen <= 0 {
-			maxLen = 256
-		}
 		preview := string(respBodyBytes)
-		if len(preview) > maxLen {
+		if maxLen > 0 && len(preview) > maxLen {
 			preview = preview[:maxLen]
 		}
 		scope.Span.SetStatus(codes.Error, fmt.Sprintf("HTTP %d", resp.StatusCode))
@@ -350,6 +341,21 @@ func (s *Server) executeHTTPTool(c *gin.Context, conn session.Connection, tool *
 		)
 		scope.Span.SetAttributes(attribute.String(cnst.AttrHTTPErrorPreview, preview))
 		scope.Span.AddEvent("http.error_response")
+	}
+
+	// Optionally capture all downstream responses (regardless of status code)
+	if s.traceCapture.DownstreamResponse.Enabled {
+		maxLen := s.traceCapture.DownstreamResponse.MaxBodyLength
+		body := string(respBodyBytes)
+		if maxLen > 0 && len(body) > maxLen {
+			body = body[:maxLen]
+		}
+		scope.Span.SetAttributes(
+			attribute.Int(cnst.AttrHTTPStatusCode, resp.StatusCode),
+			attribute.String(cnst.AttrHTTPRespType, resp.Header.Get("Content-Type")),
+			attribute.Int(cnst.AttrHTTPRespSize, len(respBodyBytes)),
+			attribute.String(cnst.AttrHTTPRespBody, body),
+		)
 	}
 
 	// Process response

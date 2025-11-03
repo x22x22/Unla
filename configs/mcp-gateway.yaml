@@ -42,6 +42,11 @@ tracing:
       body_max_length: ${TRACING_REQ_BODY_MAX_LEN:256}
       max_field_length: ${TRACING_REQ_ARG_MAX_LEN:256}
       include_fields: "${TRACING_INCLUDE_FIELDS:}"
+    # Capture all downstream responses (success and error) to traces
+    # WARNING: This may expose sensitive data. Use only in controlled environments.
+    downstream_response:
+      enabled: ${TRACING_RESP_BODY_ENABLED:false}
+      max_body_length: ${TRACING_RESP_BODY_MAX_LEN:256}
 
 # Storage configuration
 storage:

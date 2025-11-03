@@ -53,6 +53,10 @@ type CaptureConfig struct {
 		BodyEnabled    bool      `yaml:"body_enabled"`
 		BodyMaxLength  int       `yaml:"body_max_length"`
 	} `yaml:"downstream_request"`
+	DownstreamResponse struct {
+		Enabled       bool `yaml:"enabled"`
+		MaxBodyLength int  `yaml:"max_body_length"`
+	} `yaml:"downstream_response"`
 }
 
 // StringMap is a generic map[string]string type that supports:
