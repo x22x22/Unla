@@ -187,11 +187,11 @@ func createHTTPClient(tool *config.ToolConfig) (*http.Client, error) {
 }
 
 // executeHTTPTool executes a tool with the given arguments
-func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfig,
-	args map[string]any, request *http.Request, serverCfg map[string]string) (*mcp.CallToolResult, error) {
+func (s *Server) executeHTTPTool(c *gin.Context, conn session.Connection, tool *config.ToolConfig,
+	args map[string]any, serverCfg map[string]string) (*mcp.CallToolResult, error) {
 	// Create a span to represent the tool execution lifecycle
 	scope := apptrace.Tracer(cnst.TraceCore).
-		Start(request.Context(), cnst.SpanHTTPToolExecute, oteltrace.WithSpanKind(oteltrace.SpanKindInternal)).
+		Start(c.Request.Context(), cnst.SpanHTTPToolExecute, oteltrace.WithSpanKind(oteltrace.SpanKindInternal)).
 		WithAttrs(
 			attribute.String(cnst.AttrMCPSessionID, conn.Meta().ID),
 			attribute.String(cnst.AttrMCPPrefix, conn.Meta().Prefix),
@@ -199,26 +199,30 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 		)
 	ctx := scope.Ctx
 	defer scope.End()
+
+	// Get logger from Gin context (already has trace ID from middleware)
+	logger := s.getLogger(c)
+
 	// Fill default values for missing arguments
 	fillDefaultArgs(tool, args)
 
 	// Transfer forward headers from args to request HTTP headers
-	s.transferForwardHeaders(args, request)
+	s.transferForwardHeaders(args, c.Request)
 
 	// Normalize JSON string values in arguments
 	template.NormalizeJSONStringValues(args)
 
 	// Log tool execution at info level
-	s.logger.Info("executing HTTP tool",
+	logger.Info("executing HTTP tool",
 		zap.String("tool", tool.Name),
 		zap.String("method", tool.Method),
 		zap.String("session_id", conn.Meta().ID),
-		zap.String("remote_addr", request.RemoteAddr))
+		zap.String("remote_addr", c.Request.RemoteAddr))
 
 	// Prepare template context
-	tmplCtx, err := template.PrepareTemplateContext(conn.Meta().Request, args, request, serverCfg)
+	tmplCtx, err := template.PrepareTemplateContext(conn.Meta().Request, args, c.Request, serverCfg)
 	if err != nil {
-		s.logger.Error("failed to prepare template context",
+		logger.Error("failed to prepare template context",
 			zap.String("tool", tool.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Error(err))
@@ -228,7 +232,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 	// Prepare HTTP request
 	req, renderedBody, err := s.prepareRequest(tool, tmplCtx)
 	if err != nil {
-		s.logger.Error("failed to prepare HTTP request",
+		logger.Error("failed to prepare HTTP request",
 			zap.String("tool", tool.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Error(err))
@@ -270,7 +274,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 	}
 
 	// Log request details at debug level
-	s.logger.Debug("tool request details",
+	logger.Debug("tool request details",
 		zap.String("tool", tool.Name),
 		zap.String("url", req.URL.String()),
 		zap.String("method", req.Method),
@@ -282,14 +286,14 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 	// Execute request
 	cli, err := createHTTPClient(tool)
 	if err != nil {
-		s.logger.Error("failed to create HTTP client",
+		logger.Error("failed to create HTTP client",
 			zap.String("tool", tool.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Error(err))
 		return nil, fmt.Errorf("failed to create HTTP client: %w", err)
 	}
 
-	s.logger.Debug("sending HTTP request",
+	logger.Debug("sending HTTP request",
 		zap.String("tool", tool.Name),
 		zap.String("url", req.URL.String()),
 		zap.String("session_id", conn.Meta().ID))
@@ -298,7 +302,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 	req = req.WithContext(ctx)
 	resp, err := cli.Do(req)
 	if err != nil {
-		s.logger.Error("failed to execute HTTP request",
+		logger.Error("failed to execute HTTP request",
 			zap.String("tool", tool.Name),
 			zap.String("url", req.URL.String()),
 			zap.String("session_id", conn.Meta().ID),
@@ -310,7 +314,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 	// Read response body for logging in case of error
 	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		s.logger.Error("failed to read response body",
+		logger.Error("failed to read response body",
 			zap.String("tool", tool.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Int("status", resp.StatusCode),
@@ -322,7 +326,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 	resp.Body = io.NopCloser(bytes.NewBuffer(respBodyBytes))
 
 	// Log response status
-	s.logger.Debug("received HTTP response",
+	logger.Debug("received HTTP response",
 		zap.String("tool", tool.Name),
 		zap.String("session_id", conn.Meta().ID),
 		zap.String("response_body", string(respBodyBytes)),
@@ -351,7 +355,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 	// Process response
 	callToolResult, err := s.toolRespHandler.Handle(resp, tool, tmplCtx)
 	if err != nil {
-		s.logger.Error("failed to process tool response",
+		logger.Error("failed to process tool response",
 			zap.String("tool", tool.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Int("status", resp.StatusCode),
@@ -359,7 +363,7 @@ func (s *Server) executeHTTPTool(conn session.Connection, tool *config.ToolConfi
 		return nil, err
 	}
 
-	s.logger.Info("tool execution completed successfully",
+	logger.Info("tool execution completed successfully",
 		zap.String("tool", tool.Name),
 		zap.String("session_id", conn.Meta().ID),
 		zap.Int("status", resp.StatusCode))
@@ -427,8 +431,10 @@ func (s *Server) fetchHTTPToolList(conn session.Connection) ([]mcp.ToolSchema, e
 }
 
 func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn session.Connection, params mcp.CallToolParams, isSSE bool) *mcp.CallToolResult {
+	logger := s.getLogger(c)
+
 	// Log tool invocation at info level
-	s.logger.Info("invoking HTTP tool",
+	logger.Info("invoking HTTP tool",
 		zap.String("tool", params.Name),
 		zap.String("session_id", conn.Meta().ID),
 		zap.String("remote_addr", c.Request.RemoteAddr))
@@ -436,7 +442,7 @@ func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn sessi
 	// Find the tool in the precomputed map
 	tool := s.state.GetTool(conn.Meta().Prefix, params.Name)
 	if tool == nil {
-		s.logger.Warn("tool not found",
+		logger.Warn("tool not found",
 			zap.String("tool", params.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.String("remote_addr", c.Request.RemoteAddr))
@@ -447,7 +453,7 @@ func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn sessi
 	// Convert arguments to map[string]any
 	var args map[string]any
 	if err := json.Unmarshal(params.Arguments, &args); err != nil {
-		s.logger.Error("invalid tool arguments",
+		logger.Error("invalid tool arguments",
 			zap.String("tool", params.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Error(err))
@@ -456,9 +462,9 @@ func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn sessi
 	}
 
 	// Log tool arguments at debug level
-	if s.logger.Core().Enabled(zap.DebugLevel) {
+	if logger.Core().Enabled(zap.DebugLevel) {
 		argsJSON, _ := json.Marshal(args)
-		s.logger.Debug("tool arguments",
+		logger.Debug("tool arguments",
 			zap.String("tool", params.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.ByteString("arguments", argsJSON))
@@ -467,7 +473,7 @@ func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn sessi
 	// Get server configuration
 	serverCfg := s.state.GetServerConfig(conn.Meta().Prefix)
 	if serverCfg == nil {
-		s.logger.Error("server configuration not found",
+		logger.Error("server configuration not found",
 			zap.String("tool", params.Name),
 			zap.String("prefix", conn.Meta().Prefix),
 			zap.String("session_id", conn.Meta().ID))
@@ -476,9 +482,9 @@ func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn sessi
 	}
 
 	// Execute the tool
-	result, err := s.executeHTTPTool(conn, tool, args, c.Request, serverCfg.Config)
+	result, err := s.executeHTTPTool(c, conn, tool, args, serverCfg.Config)
 	if err != nil {
-		s.logger.Error("tool execution failed",
+		logger.Error("tool execution failed",
 			zap.String("tool", params.Name),
 			zap.String("session_id", conn.Meta().ID),
 			zap.Error(err))
@@ -486,7 +492,7 @@ func (s *Server) callHTTPTool(c *gin.Context, req mcp.JSONRPCRequest, conn sessi
 		return nil
 	}
 
-	s.logger.Info("tool invocation completed successfully",
+	logger.Info("tool invocation completed successfully",
 		zap.String("tool", params.Name),
 		zap.String("session_id", conn.Meta().ID))
 

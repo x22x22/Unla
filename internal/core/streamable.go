@@ -45,6 +45,8 @@ func (s *Server) handleMCP(c *gin.Context) {
 
 // handleGet handles GET requests for SSE stream
 func (s *Server) handleGet(c *gin.Context) {
+	logger := s.getLogger(c)
+
 	// Check Accept header for text/event-stream
 	acceptHeader := c.GetHeader("Accept")
 	if !strings.Contains(acceptHeader, "text/event-stream") {
@@ -74,7 +76,7 @@ func (s *Server) handleGet(c *gin.Context) {
 			case "message":
 				_, err := fmt.Fprintf(c.Writer, "event: message\ndata: %s\n\n", event.Data)
 				if err != nil {
-					s.logger.Error("failed to send SSE message", zap.Error(err))
+					logger.Error("failed to send SSE message", zap.Error(err))
 				}
 			}
 			_, _ = fmt.Fprint(c.Writer, event)
@@ -181,6 +183,8 @@ func (s *Server) handleDelete(c *gin.Context) {
 }
 
 func (s *Server) handleMCPRequest(c *gin.Context, req mcp.JSONRPCRequest, conn session.Connection) {
+	logger := s.getLogger(c)
+
 	// Create a span per MCP method to group downstream work
 	scope := apptrace.Tracer(cnst.TraceCore).
 		Start(c.Request.Context(), cnst.SpanMCPMethodPrefix+req.Method, oteltrace.WithSpanKind(oteltrace.SpanKindInternal)).
@@ -423,7 +427,7 @@ func (s *Server) handleMCPRequest(c *gin.Context, req mcp.JSONRPCRequest, conn s
 					break
 				}
 			}
-			s.logger.Info("PromptsGet-prompt found", zap.String("params.Name", params.Name), zap.String("promptname", prompt.Name))
+			logger.Info("PromptsGet-prompt found", zap.String("params.Name", params.Name), zap.String("promptname", prompt.Name))
 		case cnst.BackendProtoStdio, cnst.BackendProtoSSE, cnst.BackendProtoStreamable:
 			transport := s.state.GetTransport(conn.Meta().Prefix)
 			if transport == nil {

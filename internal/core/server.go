@@ -65,6 +65,7 @@ type (
 		auth            auth.Auth
 		forwardConfig   config.ForwardConfig
 		traceCapture    apptrace.CaptureConfig
+		tracingService  string // OTel service name for tracing
 		// Pre-parsed header lists for efficient lookup
 		ignoreHeaders   []string
 		allowHeaders    []string
@@ -83,6 +84,11 @@ func WithTraceCapture(c apptrace.CaptureConfig) ServerOption {
 // WithForwardConfig sets the forward proxy configuration.
 func WithForwardConfig(cfg config.ForwardConfig) ServerOption {
 	return func(s *Server) { s.applyForwardConfig(cfg) }
+}
+
+// WithTracing sets the tracing service name for OpenTelemetry.
+func WithTracing(serviceName string) ServerOption {
+	return func(s *Server) { s.tracingService = serviceName }
 }
 
 // NewServer creates a new MCP server. Required params are explicit; optional
@@ -112,9 +118,25 @@ func NewServer(logger *zap.Logger, port int, store storage.Store, sessionStore s
 	// Serve static files
 	s.router.Static("/static", "assets/static")
 
+	// Register OTel middleware BEFORE logger middleware
+	// so that trace context is available when logger middleware runs
+	if s.tracingService != "" {
+		s.EnableTracing(s.tracingService)
+	}
+
 	s.router.Use(s.loggerMiddleware())
 	s.router.Use(s.recoveryMiddleware())
 	return s, nil
+}
+
+// getLogger retrieves the context-aware logger from Gin context, falls back to server logger
+func (s *Server) getLogger(c *gin.Context) *zap.Logger {
+	if logger, exists := c.Get("logger"); exists {
+		if zapLogger, ok := logger.(*zap.Logger); ok {
+			return zapLogger
+		}
+	}
+	return s.logger
 }
 
 // applyForwardConfig sets forward config and recomputes derived fields.

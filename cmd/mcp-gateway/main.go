@@ -181,25 +181,14 @@ func run() {
 		logger.Fatal("Failed to initialize auth service", zap.Error(err))
 	}
 
-	// Create server instance
-	server, err := core.NewServer(
-		logger,
-		cfg.Port,
-		store,
-		sessionStore,
-		a,
-		core.WithForwardConfig(cfg.Forward),
-		core.WithTraceCapture(cfg.Tracing.Capture),
-	)
-	if err != nil {
-		logger.Fatal("Failed to create server", zap.Error(err))
-	}
-
-	// Enable gin tracing middleware if tracing is configured
+	// Initialize tracing BEFORE creating server if enabled
+	var tracingServiceName string
 	if cfg.Tracing.Enabled {
 		if cfg.Tracing.ServiceName == "" {
 			cfg.Tracing.ServiceName = "mcp-gateway"
 		}
+		tracingServiceName = cfg.Tracing.ServiceName
+
 		shutdown, err := trace.InitTracing(ctx, &cfg.Tracing, logger)
 		if err != nil {
 			logger.Error("Failed to initialize tracing", zap.Error(err))
@@ -217,10 +206,22 @@ func run() {
 				zap.String("endpoint", cfg.Tracing.Endpoint),
 				zap.String("protocol", cfg.Tracing.Protocol),
 			)
-
 		}
+	}
 
-		server.EnableTracing(cfg.Tracing.ServiceName)
+	// Create server instance with tracing enabled from the start
+	server, err := core.NewServer(
+		logger,
+		cfg.Port,
+		store,
+		sessionStore,
+		a,
+		core.WithForwardConfig(cfg.Forward),
+		core.WithTraceCapture(cfg.Tracing.Capture),
+		core.WithTracing(tracingServiceName), // Register OTel middleware early
+	)
+	if err != nil {
+		logger.Fatal("Failed to create server", zap.Error(err))
 	}
 
 	err = server.RegisterRoutes(ctx)

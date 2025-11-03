@@ -9,6 +9,7 @@ import (
 	"github.com/amoylab/unla/internal/common/config"
 	"github.com/amoylab/unla/internal/mcp/session"
 	"github.com/amoylab/unla/pkg/mcp"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
@@ -37,7 +38,9 @@ func TestExecuteHTTPTool_Success(t *testing.T) {
 	}
 	req, _ := http.NewRequest(http.MethodGet, srv.URL, nil)
 	conn := &fakeConnExec{meta: &session.Meta{ID: "sid", Request: &session.RequestInfo{Headers: map[string]string{"X-Req": "v"}}}}
-	res, err := s.executeHTTPTool(conn, tool, map[string]any{}, req, map[string]string{})
+	c, _ := gin.CreateTestContext(nil)
+	c.Request = req
+	res, err := s.executeHTTPTool(c, conn, tool, map[string]any{}, map[string]string{})
 	assert.NoError(t, err)
 	if assert.NotNil(t, res) {
 		if tc, ok := res.Content[0].(*mcp.TextContent); ok {
@@ -59,12 +62,14 @@ func TestExecuteHTTPTool_ForwardHeadersAndRequestError(t *testing.T) {
 	}
 	req, _ := http.NewRequest(http.MethodGet, "http://example", nil)
 	conn := &fakeConnExec{meta: &session.Meta{ID: "sid", Request: &session.RequestInfo{Headers: map[string]string{}}}}
+	c, _ := gin.CreateTestContext(nil)
+	c.Request = req
 
 	args := map[string]any{
 		"_hdr": map[string]any{"X-A": "B"},
 	}
 
-	res, err := s.executeHTTPTool(conn, tool, args, req, map[string]string{})
+	res, err := s.executeHTTPTool(c, conn, tool, args, map[string]string{})
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }

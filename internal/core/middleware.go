@@ -9,6 +9,7 @@ import (
 	"github.com/amoylab/unla/internal/common/config"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -27,6 +28,12 @@ func (s *Server) loggerMiddleware() gin.HandlerFunc {
 			zap.String("remote_addr", c.Request.RemoteAddr),
 			zap.String("user_agent", c.Request.UserAgent()),
 		)
+
+		// Extract trace ID from OpenTelemetry context and inject into logger
+		span := trace.SpanFromContext(c.Request.Context())
+		if span.SpanContext().IsValid() {
+			logger = logger.With(zap.String("trace_id", span.SpanContext().TraceID().String()))
+		}
 
 		// Use Debug level to record more detailed request information
 		if s.logger.Core().Enabled(zap.DebugLevel) {

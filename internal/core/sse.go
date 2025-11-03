@@ -25,6 +25,8 @@ import (
 
 // handleSSE handles SSE connections
 func (s *Server) handleSSE(c *gin.Context) {
+	logger := s.getLogger(c)
+
 	// Create a child span for the SSE connection lifecycle
 	scope := apptrace.Tracer(cnst.TraceCore).
 		Start(c.Request.Context(), cnst.SpanSSEConnect, oteltrace.WithSpanKind(oteltrace.SpanKindInternal))
@@ -83,7 +85,7 @@ func (s *Server) handleSSE(c *gin.Context) {
 		attribute.String(cnst.AttrClientUserAgent, c.Request.UserAgent()),
 	)
 
-	s.logger.Info("establishing SSE connection",
+	logger.Info("establishing SSE connection",
 		zap.String("session_id", sessionID),
 		zap.String("prefix", prefix),
 		zap.String("remote_addr", c.Request.RemoteAddr),
@@ -92,7 +94,7 @@ func (s *Server) handleSSE(c *gin.Context) {
 
 	conn, err := s.sessions.Register(ctx, meta)
 	if err != nil {
-		s.logger.Error("failed to register SSE session",
+		logger.Error("failed to register SSE session",
 			zap.Error(err),
 			zap.String("session_id", sessionID),
 			zap.String("prefix", prefix),
@@ -102,7 +104,7 @@ func (s *Server) handleSSE(c *gin.Context) {
 		return
 	}
 
-	s.logger.Debug("SSE session registered successfully",
+	logger.Debug("SSE session registered successfully",
 		zap.String("session_id", sessionID),
 		zap.String("prefix", prefix),
 	)
@@ -113,14 +115,14 @@ func (s *Server) handleSSE(c *gin.Context) {
 	if ssePrefix != "" {
 		endpointURL = fmt.Sprintf("%s/%s", ssePrefix, endpointURL)
 	}
-	s.logger.Debug("sending initial endpoint event",
+	logger.Debug("sending initial endpoint event",
 		zap.String("session_id", sessionID),
 		zap.String("endpoint_url", endpointURL),
 	)
 
 	_, err = fmt.Fprintf(c.Writer, "event: endpoint\ndata: %s\n\n", endpointURL)
 	if err != nil {
-		s.logger.Error("failed to send initial endpoint event",
+		logger.Error("failed to send initial endpoint event",
 			zap.Error(err),
 			zap.String("session_id", sessionID),
 			zap.String("remote_addr", c.Request.RemoteAddr),
@@ -130,7 +132,7 @@ func (s *Server) handleSSE(c *gin.Context) {
 	}
 	c.Writer.Flush()
 
-	s.logger.Info("SSE connection ready",
+	logger.Info("SSE connection ready",
 		zap.String("session_id", sessionID),
 		zap.String("prefix", prefix),
 		zap.String("remote_addr", c.Request.RemoteAddr),
@@ -141,11 +143,11 @@ func (s *Server) handleSSE(c *gin.Context) {
 		select {
 		case event := <-conn.EventQueue():
 			if event == nil {
-				s.logger.Warn("received nil event for session",
+				logger.Warn("received nil event for session",
 					zap.String("session_id", sessionID),
 				)
 			} else {
-				s.logger.Debug("sending event to SSE client",
+				logger.Debug("sending event to SSE client",
 					zap.String("session_id", sessionID),
 					zap.String("event_type", event.Event),
 					zap.Int("data_size", len(event.Data)),
@@ -161,7 +163,7 @@ func (s *Server) handleSSE(c *gin.Context) {
 				))
 				_, err = fmt.Fprintf(c.Writer, "event: message\ndata: %s\n\n", event.Data)
 				if err != nil {
-					s.logger.Error("failed to send SSE message",
+					logger.Error("failed to send SSE message",
 						zap.Error(err),
 						zap.String("session_id", sessionID),
 						zap.String("remote_addr", c.Request.RemoteAddr),
@@ -173,7 +175,7 @@ func (s *Server) handleSSE(c *gin.Context) {
 				))
 				_, err = fmt.Fprint(c.Writer, event)
 				if err != nil {
-					s.logger.Error("failed to write SSE event",
+					logger.Error("failed to write SSE event",
 						zap.Error(err),
 						zap.String("session_id", sessionID),
 						zap.String("event_type", event.Event),
@@ -182,13 +184,13 @@ func (s *Server) handleSSE(c *gin.Context) {
 			}
 			c.Writer.Flush()
 		case <-ctx.Done():
-			s.logger.Info("SSE client disconnected",
+			logger.Info("SSE client disconnected",
 				zap.String("session_id", sessionID),
 				zap.String("remote_addr", c.Request.RemoteAddr),
 			)
 			return
 		case <-s.shutdownCh:
-			s.logger.Info("SSE connection closing due to server shutdown",
+			logger.Info("SSE connection closing due to server shutdown",
 				zap.String("session_id", sessionID),
 			)
 			return
