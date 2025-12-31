@@ -65,30 +65,7 @@ export function Layout({ children }: LayoutProps) {
     fetchUserInfo();
   }, [t]);
 
-  const llmConfigAdminOnly = window.RUNTIME_CONFIG?.LLM_CONFIG_ADMIN_ONLY;
-  const canShowLLM =
-    llmConfigAdminOnly === false ||
-    (llmConfigAdminOnly === true && userInfo?.role === 'admin');
-
   const menuGroups = [
-    {
-      key: 'chat-ai',
-      label: t('nav.groups.chat_ai', 'Chat & AI'),
-      items: [
-        {
-          key: 'chat',
-          label: t('nav.chat'),
-          icon: 'lucide:message-square',
-          path: '/chat',
-        },
-        ...(canShowLLM ? [{
-          key: 'llm',
-          label: t('nav.llm'),
-          icon: 'lucide:brain',
-          path: '/llm',
-        }] : []),
-      ]
-    },
     {
       key: 'gateway-config',
       label: t('nav.groups.gateway_config', 'Gateway & Config'),

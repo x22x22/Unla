@@ -186,7 +186,6 @@ func initRouter(ctx context.Context, db database.Database, store storage.Store, 
 	protected := r.Group("/api")
 	protected.Use(middleware.JWTAuthMiddleware(jwtService))
 	{
-		chatHandler := apiserverHandler.NewChat(db, logger)
 		mcpHandler = apiserverHandler.NewMCP(
 			db,
 			store,
@@ -196,7 +195,6 @@ func initRouter(ctx context.Context, db database.Database, store storage.Store, 
 			cfg.MCP.CapabilitiesCacheTTL,
 		)
 		openapiHandler := apiserverHandler.NewOpenAPI(db, store, ntf, logger)
-		systemPromptHandler := apiserverHandler.NewSystemPrompt(db, logger)
 
 		// Auth routes
 		protected.POST("/auth/change-password", authH.ChangePassword)
@@ -248,19 +246,6 @@ func initRouter(ctx context.Context, db database.Database, store storage.Store, 
 
 		// OpenAPI routes
 		protected.POST("/openapi/import", openapiHandler.HandleImport)
-
-		protected.GET("/chat/sessions", chatHandler.HandleGetChatSessions)
-		protected.GET("/chat/sessions/:sessionId/messages", chatHandler.HandleGetChatMessages)
-		protected.DELETE("/chat/sessions/:sessionId", chatHandler.HandleDeleteChatSession)
-		protected.PUT("/chat/sessions/:sessionId/title", chatHandler.HandleUpdateChatSessionTitle)
-		protected.POST("/chat/messages", chatHandler.HandleSaveChatMessage)
-
-		// System prompt routes
-		protected.GET("/chat/systemprompt", systemPromptHandler.GetSystemPrompt)
-		protected.PUT("/chat/systemprompt", systemPromptHandler.SaveSystemPrompt)
-
-		// Default LLM provider endpoint
-		protected.GET("/defaultllmprovider", chatHandler.HandleDefaultLLMProviders)
 	}
 
 	// Public runtime config endpoint for frontend

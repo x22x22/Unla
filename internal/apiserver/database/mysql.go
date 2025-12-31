@@ -28,8 +28,7 @@ func NewMySQL(cfg *config.DatabaseConfig) (Database, error) {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Add SystemPrompt to migrations
-	if err := gormDB.AutoMigrate(&Message{}, &Session{}, &User{}, &Tenant{}, &UserTenant{}, &SystemPrompt{}); err != nil {
+	if err := gormDB.AutoMigrate(&User{}, &Tenant{}, &UserTenant{}); err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
@@ -49,79 +48,6 @@ func (db *MySQL) Close() error {
 		return err
 	}
 	return sqlDB.Close()
-}
-
-func (db *MySQL) SaveMessage(ctx context.Context, message *Message) error {
-	return db.db.WithContext(ctx).Create(message).Error
-}
-
-func (db *MySQL) GetMessages(ctx context.Context, sessionID string) ([]*Message, error) {
-	var messages []*Message
-	err := db.db.WithContext(ctx).
-		Where("session_id = ?", sessionID).
-		Order("timestamp asc").
-		Find(&messages).Error
-	return messages, err
-}
-
-func (db *MySQL) GetMessagesWithPagination(ctx context.Context, sessionID string, page, pageSize int) ([]*Message, error) {
-	var messages []*Message
-	offset := (page - 1) * pageSize
-	err := db.db.WithContext(ctx).
-		Where("session_id = ?", sessionID).
-		Order("timestamp asc").
-		Offset(offset).
-		Limit(pageSize).
-		Find(&messages).Error
-	return messages, err
-}
-
-func (db *MySQL) CreateSession(ctx context.Context, sessionId string) error {
-	session := &Session{
-		ID:        sessionId,
-		CreatedAt: time.Now(),
-	}
-	return db.db.WithContext(ctx).Create(session).Error
-}
-
-func (db *MySQL) CreateSessionWithTitle(ctx context.Context, sessionId string, title string) error {
-	session := &Session{
-		ID:        sessionId,
-		CreatedAt: time.Now(),
-		Title:     title,
-	}
-	return db.db.WithContext(ctx).Create(session).Error
-}
-
-func (db *MySQL) UpdateSessionTitle(ctx context.Context, sessionID string, title string) error {
-	return db.db.WithContext(ctx).
-		Model(&Session{}).
-		Where("id = ?", sessionID).
-		Update("title", title).Error
-}
-
-func (db *MySQL) SessionExists(ctx context.Context, sessionID string) (bool, error) {
-	var count int64
-	err := db.db.WithContext(ctx).
-		Model(&Session{}).
-		Where("id = ?", sessionID).
-		Count(&count).Error
-	return count > 0, err
-}
-
-func (db *MySQL) GetSessions(ctx context.Context) ([]*Session, error) {
-	var sessions []*Session
-	err := db.db.WithContext(ctx).
-		Order("created_at desc").
-		Find(&sessions).Error
-	return sessions, err
-}
-
-// DeleteSession deletes a session by ID
-func (db *MySQL) DeleteSession(ctx context.Context, sessionID string) error {
-	return db.db.WithContext(ctx).
-		Where("id = ?", sessionID).
-		Delete(&Session{}).Error
 }
 
 // CreateUser creates a new user
@@ -274,34 +200,4 @@ func (db *MySQL) DeleteUserTenants(ctx context.Context, userID uint) error {
 	dbSession := getDBFromContext(ctx, db.db)
 
 	return dbSession.Where("user_id = ?", userID).Delete(&UserTenant{}).Error
-}
-
-// --- SystemPrompt persistent methods ---
-
-func (db *MySQL) GetSystemPrompt(ctx context.Context, userID uint) (string, error) {
-	var sp SystemPrompt
-	err := db.db.WithContext(ctx).Where("user_id = ?", userID).First(&sp).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return "", nil // No prompt set yet
-		}
-		return "", err
-	}
-	return sp.Prompt, nil
-}
-
-func (db *MySQL) SaveSystemPrompt(ctx context.Context, userID uint, prompt string) error {
-	var sp SystemPrompt
-	err := db.db.WithContext(ctx).Where("user_id = ?", userID).First(&sp).Error
-	now := time.Now()
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			sp = SystemPrompt{UserID: userID, Prompt: prompt, UpdatedAt: now}
-			return db.db.WithContext(ctx).Create(&sp).Error
-		}
-		return err
-	}
-	sp.Prompt = prompt
-	sp.UpdatedAt = now
-	return db.db.WithContext(ctx).Save(&sp).Error
 }
