@@ -159,4 +159,12 @@ clean:
 	docker rmi $(PROJECT_NAME)-allinone:$(IMAGE_TAG) || true
 	docker rmi $(DOCKER_REGISTRY)/$(PROJECT_NAME)/allinone:$(IMAGE_TAG) || true
 	docker rmi $(GHCR_REGISTRY)/$(PROJECT_NAME)/allinone:$(IMAGE_TAG) || true
-	docker rmi $(ALI_REGISTRY)/$(PROJECT_NAME)/allinone:$(IMAGE_TAG) || true 
+	docker rmi $(ALI_REGISTRY)/$(PROJECT_NAME)/allinone:$(IMAGE_TAG) || true
+
+format:
+	gofmt -w .
+	goimports -w .
+
+fmt: format
+
+lint: format

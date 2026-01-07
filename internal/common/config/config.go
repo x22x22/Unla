@@ -39,6 +39,7 @@ type (
 		ReloadInterval time.Duration    `yaml:"reload_interval"`
 		ReloadSwitch   bool             `yaml:"reload_switch"`
 		Forward        ForwardConfig    `yaml:"forward"`
+		ToolAccess     ToolAccessConfig `yaml:"tool_access"`
 		PID            string           `yaml:"pid"`
 		SuperAdmin     SuperAdminConfig `yaml:"super_admin"`
 		Logger         LoggerConfig     `yaml:"logger"`
@@ -56,6 +57,16 @@ type (
 		Path      string    `yaml:"path"`
 		Namespace string    `yaml:"namespace"`
 		Buckets   []float64 `yaml:"buckets"`
+	}
+
+	// ToolAccessConfig controls access policies for tool endpoints.
+	ToolAccessConfig struct {
+		InternalNetwork InternalNetworkAccessConfig `yaml:"internal_network"`
+	}
+
+	// InternalNetworkAccessConfig defines allowlist for internal network targets.
+	InternalNetworkAccessConfig struct {
+		Allowlist []string `yaml:"allowlist"`
 	}
 
 	// SessionConfig represents the session storage configuration

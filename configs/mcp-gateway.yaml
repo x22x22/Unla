@@ -147,6 +147,15 @@ forward:
     case_insensitive: ${FORWARD_HEADER_CASE_INSENSITIVE:true}
     override_existing: ${FORWARD_HEADER_OVERRIDE_EXISTING:false}
 
+tool_access:
+  internal_network:
+    # Allowlist of internal targets (CIDR/IP/hostname). Empty means internal access is blocked.
+    allowlist:
+      - "127.0.0.1/32"
+      - "localhost"
+#      - internal.service.local
+#      - 192.168.1.1
+
 metrics:
   enabled: ${METRICS_ENABLED:false}
   path: "${METRICS_PATH:/metrics}"

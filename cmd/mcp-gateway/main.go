@@ -217,6 +217,7 @@ func run() {
 		sessionStore,
 		a,
 		core.WithForwardConfig(cfg.Forward),
+		core.WithToolAccessConfig(cfg.ToolAccess),
 		core.WithTraceCapture(cfg.Tracing.Capture),
 		core.WithTracing(tracingServiceName), // Register OTel middleware early
 	)

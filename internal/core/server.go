@@ -69,6 +69,8 @@ type (
 		tracingService  string // OTel service name for tracing
 		metrics         *metrics.Metrics
 		metricsPath     string
+		toolAccess      config.ToolAccessConfig
+		internalNetACL  internalNetworkAllowlist
 		// Pre-parsed header lists for efficient lookup
 		ignoreHeaders   []string
 		allowHeaders    []string
@@ -87,6 +89,11 @@ func WithTraceCapture(c apptrace.CaptureConfig) ServerOption {
 // WithForwardConfig sets the forward proxy configuration.
 func WithForwardConfig(cfg config.ForwardConfig) ServerOption {
 	return func(s *Server) { s.applyForwardConfig(cfg) }
+}
+
+// WithToolAccessConfig sets the tool access policy configuration.
+func WithToolAccessConfig(cfg config.ToolAccessConfig) ServerOption {
+	return func(s *Server) { s.applyToolAccessConfig(cfg) }
 }
 
 // WithTracing sets the tracing service name for OpenTelemetry.
@@ -153,6 +160,17 @@ func (s *Server) applyForwardConfig(cfg config.ForwardConfig) {
 		s.ignoreHeaders = nil
 		s.allowHeaders = nil
 	}
+}
+
+// applyToolAccessConfig sets tool access config and parses internal allowlists.
+func (s *Server) applyToolAccessConfig(cfg config.ToolAccessConfig) {
+	s.toolAccess = cfg
+	allowlist, invalid := parseInternalNetworkAllowlist(cfg.InternalNetwork.Allowlist)
+	if len(invalid) > 0 {
+		s.logger.Warn("invalid internal network allowlist entries",
+			zap.Strings("entries", invalid))
+	}
+	s.internalNetACL = allowlist
 }
 
 // RegisterRoutes registers routes with the given router for MCP servers

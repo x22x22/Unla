@@ -29,7 +29,8 @@ func TestExecuteHTTPTool_Success(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	s := &Server{logger: zap.NewNop(), toolRespHandler: CreateResponseHandlerChain()}
+	allowlist, _ := parseInternalNetworkAllowlist([]string{"127.0.0.0/8", "::1/128"})
+	s := &Server{logger: zap.NewNop(), toolRespHandler: CreateResponseHandlerChain(), internalNetACL: allowlist}
 	tool := &config.ToolConfig{
 		Name:         "t",
 		Method:       http.MethodGet,

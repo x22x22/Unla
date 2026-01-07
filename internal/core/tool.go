@@ -239,6 +239,15 @@ func (s *Server) executeHTTPTool(c *gin.Context, conn session.Connection, tool *
 		return nil, err
 	}
 
+	if err := s.validateToolEndpoint(ctx, req.URL); err != nil {
+		logger.Warn("blocked tool endpoint",
+			zap.String("tool", tool.Name),
+			zap.String("session_id", conn.Meta().ID),
+			zap.String("endpoint", req.URL.String()),
+			zap.Error(err))
+		return nil, err
+	}
+
 	// Optionally capture selected downstream request fields via templates on span
 	if s.traceCapture.DownstreamRequest.Enabled {
 		include := s.traceCapture.DownstreamRequest.IncludeFields
