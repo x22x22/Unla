@@ -71,25 +71,13 @@ jobs:
           go-version: '1.24.1'
           cache: true
 
-      - name: Run tests for cmd
-        run: go test ./cmd/... -v
-
-      - name: Run tests for internal
-        run: go test ./internal/... -v -race
-
-      - name: Run tests for pkg
-        run: go test ./pkg/... -v -race
-
-      - name: Generate coverage
-        run: |
-          go test ./cmd/... -coverprofile=coverage-cmd.txt -covermode=atomic
-          go test ./internal/... -coverprofile=coverage-internal.txt -covermode=atomic
-          go test ./pkg/... -coverprofile=coverage-pkg.txt -covermode=atomic
+      - name: Run Go Tests and Coverage
+        run: make test-coverage TEST_FLAGS="-v -race"
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverage-cmd.txt,./coverage-internal.txt,./coverage-pkg.txt
+          files: coverage.out
           name: go-coverage
           fail_ci_if_error: false
 
