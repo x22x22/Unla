@@ -127,7 +127,9 @@ export function GatewayManager() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [tenants, setTenants] = React.useState<Tenant[]>([]);
   const [selectedTenant, setSelectedTenant] = React.useState<string | undefined>(undefined);
-  const [viewMode, setViewMode] = React.useState<string>('table');
+  const [viewMode, setViewMode] = React.useState<string>(() => {
+    return localStorage.getItem('gateway_view_mode') || 'table';
+  });
   const [isDark, setIsDark] = React.useState(() => {
     return document.documentElement.classList.contains('dark');
   });
@@ -557,7 +559,11 @@ export function GatewayManager() {
         <Tabs
           aria-label={t('gateway.view_mode')}
           selectedKey={viewMode}
-          onSelectionChange={(key) => setViewMode(key as string)}
+          onSelectionChange={(key) => {
+            const mode = key as string;
+            setViewMode(mode);
+            localStorage.setItem('gateway_view_mode', mode);
+          }}
           size="sm"
           classNames={{
             tabList: "bg-default-100 p-1 rounded-lg"
