@@ -72,24 +72,33 @@ const RUNTIME_CONFIG = (window.RUNTIME_CONFIG || {}) as Record<string, unknown>;
 
 // Helper to get the gateway base URL
 const getGatewayBaseUrl = () => {
-  let base = RUNTIME_CONFIG.VITE_MCP_GATEWAY_BASE_URL as string;
-  if (!base) return '';
+  let base = (RUNTIME_CONFIG.VITE_MCP_GATEWAY_BASE_URL as string) || '';
+  
   // Remove trailing slash if present
   base = base.replace(/\/+$/, '');
+  
   if (base.startsWith('http')) {
     return base;
   }
+  
   // Remove trailing slash from window.location.origin just in case
   const origin = window.location.origin.replace(/\/+$/, '');
-  // Ensure base starts with a slash
-  if (!base.startsWith('/')) {
+  
+  // Ensure base starts with a slash if it's not empty
+  if (base && !base.startsWith('/')) {
     base = '/' + base;
   }
+  
   return `${origin}${base}`;
 };
 
 // Helper to get direct gateway base URL using modifier
 const getDirectGatewayBaseUrl = () => {
+  const explicitBaseUrl = window.RUNTIME_CONFIG?.VITE_GATEWAY_SERVICE_BASE_URL as string;
+  if (explicitBaseUrl) {
+    return explicitBaseUrl.replace(/\/+$/, '');
+  }
+
   let modifier = (window.RUNTIME_CONFIG?.VITE_DIRECT_MCP_GATEWAY_MODIFIER as string) || ':5235';
   const origin = window.location.origin.replace(/\/+$/, '');
 

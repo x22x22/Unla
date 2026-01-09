@@ -28,6 +28,7 @@ func (h *RuntimeConfigHandler) HandleRuntimeConfig(c *gin.Context) {
 		"VITE_WS_BASE_URL":                 h.cfg.Web.WSBaseURL,
 		"VITE_MCP_GATEWAY_BASE_URL":        h.cfg.Web.MCPGatewayBaseURL,
 		"VITE_DIRECT_MCP_GATEWAY_MODIFIER": h.cfg.Web.DirectMCPGatewayModifier,
+		"VITE_GATEWAY_SERVICE_BASE_URL":    h.cfg.Web.GatewayServiceBaseURL,
 		"VITE_BASE_URL":                    h.cfg.Web.BaseURL,
 
 		// Add new properties matching our TypeScript interface
@@ -35,6 +36,7 @@ func (h *RuntimeConfigHandler) HandleRuntimeConfig(c *gin.Context) {
 		"debugMode":                h.cfg.Web.DebugMode,
 		"version":                  version.Version,
 		"directMcpGatewayModifier": h.cfg.Web.DirectMCPGatewayModifier,
+		"gatewayServiceBaseUrl":    h.cfg.Web.GatewayServiceBaseURL,
 		"features": gin.H{
 			"enableExperimental": h.cfg.Web.EnableExperimental,
 		},

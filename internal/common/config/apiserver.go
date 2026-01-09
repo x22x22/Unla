@@ -46,6 +46,7 @@ type (
 		WSBaseURL                string `yaml:"ws_base_url"`
 		MCPGatewayBaseURL        string `yaml:"mcp_gateway_base_url"`
 		DirectMCPGatewayModifier string `yaml:"direct_mcp_gateway_modifier"`
+		GatewayServiceBaseURL    string `yaml:"gateway_service_base_url"`
 		BaseURL                  string `yaml:"base_url"`
 		DebugMode                bool   `yaml:"debug_mode"`
 		EnableExperimental       bool   `yaml:"enable_experimental"`
