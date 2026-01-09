@@ -170,3 +170,36 @@ func TestPrepareRequest(t *testing.T) {
 	// rendered body is returned for tracing capture
 	assert.Equal(t, `{"a": "V"}`, rendered)
 }
+
+func TestPrepareRequest_PathTraversal(t *testing.T) {
+	s := &Server{logger: zap.NewNop()}
+	tool := &config.ToolConfig{
+		Method:   "GET",
+		Endpoint: "http://example.com/users/{{ .Args.id }}",
+		Args: []config.ArgConfig{
+			{Name: "id", Position: "path"},
+		},
+	}
+
+	ctx := template.NewContext()
+	ctx.Args["id"] = "../admin"
+
+	req, _, err := s.prepareRequest(tool, ctx)
+	assert.NoError(t, err)
+	// If escaped correctly: Path should be /users/../admin (decoded) and RawPath should be /users/%2E%2E%2Fadmin
+	// If NOT escaped: Path will be /admin (cleaned by http.NewRequest)
+
+	// We expect safety, so we expect the path to NOT be collapsed to /admin
+	assert.Equal(t, "/users/../admin", req.URL.Path)
+	assert.Equal(t, "/users/..%2Fadmin", req.URL.RawPath)
+
+	// Test case for '?' injection
+	ctx.Args["id"] = "1?debug=true"
+	req, _, err = s.prepareRequest(tool, ctx)
+	assert.NoError(t, err)
+	// '?' should be escaped to %3F.
+	// In Go's url.URL, if EscapedPath(Path) == RawPath, RawPath may be empty.
+	// We check the final string and that RawQuery is empty.
+	assert.Contains(t, req.URL.String(), "1%3Fdebug=true")
+	assert.Empty(t, req.URL.RawQuery)
+}

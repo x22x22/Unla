@@ -54,8 +54,24 @@ func (s *Server) shouldIgnoreHeader(headerName string) bool {
 
 // prepareRequest prepares the HTTP request with templates and arguments
 func (s *Server) prepareRequest(tool *config.ToolConfig, tmplCtx *template.Context) (*http.Request, string, error) {
+	// Create a context copy for endpoint rendering to support safe path arguments
+	endpointCtx := *tmplCtx
+	endpointCtx.Args = make(map[string]any, len(tmplCtx.Args))
+	for k, v := range tmplCtx.Args {
+		endpointCtx.Args[k] = v
+	}
+
+	// Apply URL path escaping for arguments defined as "path" position
+	for _, arg := range tool.Args {
+		if strings.ToLower(arg.Position) == "path" {
+			if val, ok := endpointCtx.Args[arg.Name]; ok {
+				endpointCtx.Args[arg.Name] = url.PathEscape(fmt.Sprint(val))
+			}
+		}
+	}
+
 	// Process endpoint template
-	endpoint, err := template.RenderTemplate(tool.Endpoint, tmplCtx)
+	endpoint, err := template.RenderTemplate(tool.Endpoint, &endpointCtx)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to render endpoint template: %w", err)
 	}
