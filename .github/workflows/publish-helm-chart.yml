@@ -34,7 +34,7 @@ jobs:
         run: |
           cd chart-repo
           cp ../packaged/*.tgz ./
-          helm repo index . --url https://amoylba.github.io/unla-helm-charts --merge index.yaml || true
+          helm repo index . --url https://amoylab.github.io/unla-helm-charts --merge index.yaml || true
 
       - name: Commit and push
         run: |
