@@ -150,11 +150,8 @@ forward:
 tool_access:
   internal_network:
     # Allowlist of internal targets (CIDR/IP/hostname). Empty means internal access is blocked.
-    allowlist:
-      - "127.0.0.1/32"
-      - "localhost"
-#      - internal.service.local
-#      - 192.168.1.1
+    allowlist: "${INTERNAL_NETWORK_ALLOWLIST:127.0.0.1/32,localhost}"
+#    allowlist: "internal.service.local,192.168.1.1"
 
 metrics:
   enabled: ${METRICS_ENABLED:false}

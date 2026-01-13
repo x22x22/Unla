@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/amoylab/unla/pkg/helper"
@@ -66,7 +67,7 @@ type (
 
 	// InternalNetworkAccessConfig defines allowlist for internal network targets.
 	InternalNetworkAccessConfig struct {
-		Allowlist []string `yaml:"allowlist"`
+		Allowlist StringList `yaml:"allowlist"`
 	}
 
 	// SessionConfig represents the session storage configuration
@@ -145,6 +146,37 @@ type (
 
 type Type interface {
 	MCPGatewayConfig | APIServerConfig
+}
+
+// StringList supports YAML sequences and comma-separated strings.
+type StringList []string
+
+func (s *StringList) UnmarshalYAML(value *yaml.Node) error {
+	var raw string
+	if err := value.Decode(&raw); err == nil {
+		raw = strings.TrimSpace(raw)
+		if raw == "" {
+			*s = []string{}
+			return nil
+		}
+		parts := strings.Split(raw, ",")
+		out := make([]string, 0, len(parts))
+		for _, part := range parts {
+			part = strings.TrimSpace(part)
+			if part != "" {
+				out = append(out, part)
+			}
+		}
+		*s = out
+		return nil
+	}
+
+	var items []string
+	if err := value.Decode(&items); err != nil {
+		return err
+	}
+	*s = items
+	return nil
 }
 
 // LoadConfig loads configuration from a YAML file with environment variable support

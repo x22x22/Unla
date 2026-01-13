@@ -57,3 +57,22 @@ pid: ${X_PID:/tmp/gw.pid}
 	assert.Equal(t, "C", cfg.Forward.Header.IgnoreHeaders)
 	assert.True(t, cfg.Forward.Header.CaseInsensitive)
 }
+
+func TestLoadConfig_MCPGateway_InternalAllowlistString(t *testing.T) {
+	tmp := t.TempDir()
+	old, _ := os.Getwd()
+	t.Cleanup(func() { _ = os.Chdir(old) })
+	_ = os.Chdir(tmp)
+
+	yaml := `
+tool_access:
+  internal_network:
+    allowlist: "127.0.0.1/32, localhost,,::1/128"
+`
+	file := filepath.Join(tmp, "mcp-gateway.yaml")
+	assert.NoError(t, os.WriteFile(file, []byte(yaml), 0o644))
+
+	cfg, _, err := LoadConfig[MCPGatewayConfig]("mcp-gateway.yaml")
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"127.0.0.1/32", "localhost", "::1/128"}, []string(cfg.ToolAccess.InternalNetwork.Allowlist))
+}
