@@ -143,6 +143,14 @@ test-race:
 template-tester:
 	go build -o bin/template-tester cmd/template-tester/main.go
 
+# Build template tester docker image
+.PHONY: docker-template-tester
+docker-template-tester:
+	docker build --platform=linux/amd64 \
+		-t $(PROJECT_NAME)-template-tester:$(IMAGE_TAG) \
+		-f deploy/docker/template-tester/Dockerfile .
+	docker tag $(PROJECT_NAME)-template-tester:$(IMAGE_TAG) $(PROJECT_NAME)-template-tester:latest
+
 # Clean up test artifacts
 clean-test:
 	rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
