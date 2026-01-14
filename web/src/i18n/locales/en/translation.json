@@ -336,7 +336,6 @@
     "env_key_placeholder": "Enter environment variable name",
     "env_value_placeholder": "Enter environment variable value",
     "header_key_placeholder": "Enter header name",
-    "header_name_placeholder": "Enter header name",
     "header_value_placeholder": "Enter header value",
     "headers": "Request Headers",
     "select_file": "Select File",

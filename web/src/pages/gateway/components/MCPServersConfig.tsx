@@ -178,6 +178,11 @@ export function MCPServersConfig({
 
     if (field === 'key') {
       if (key !== value) {
+        // Check if the new key already exists
+        if (headers[value] !== undefined) {
+          console.warn(`Header key "${value}" already exists. Skipping rename.`);
+          return;
+        }
         headers[value] = headers[key];
         delete headers[key];
       }
@@ -199,7 +204,6 @@ export function MCPServersConfig({
     const headers = { ...server.headers };
 
     let newKey = "Authorization";
-    let count = 1;
 
     const commonHeaders = [
       "Authorization",
@@ -219,6 +223,7 @@ export function MCPServersConfig({
     }
 
     if (existingKeys.includes(newKey)) {
+      let count = 1;
       while (existingKeys.includes(`X-Custom-Header-${count}`)) {
         count++;
       }
