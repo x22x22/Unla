@@ -1,0 +1,42 @@
+name: "streamable-http-example"
+tenant: "default"
+
+routers:
+  - server: "web-search-service"
+    prefix: "/gateway/web-search"
+    cors:
+      allowOrigins:
+        - "*"
+      allowMethods:
+        - "GET"
+        - "POST"
+        - "OPTIONS"
+      allowHeaders:
+        - "Content-Type"
+        - "Authorization"
+        - "Mcp-Session-Id"
+        - "mcp-protocol-version"
+      exposeHeaders:
+        - "Mcp-Session-Id"
+        - "mcp-protocol-version"
+      allowCredentials: true
+
+mcpServers:
+  - type: "streamable-http"
+    name: "web-search-service"
+    url: "http://10.22.0.10:6035/api/mcp/web_search_prime/mcp"
+    headers:
+      Authorization: "Bearer YOUR_API_TOKEN_HERE"
+      X-API-Key: "your-api-key"
+      X-Custom-Header: "custom-value"
+    policy: "onDemand"
+    preinstalled: false
+
+  - type: "sse"
+    name: "sse-with-auth"
+    url: "http://localhost:5237/sse"
+    headers:
+      Authorization: "Bearer YOUR_SSE_TOKEN"
+      X-Client-ID: "unla-gateway"
+    policy: "onDemand"
+    preinstalled: false

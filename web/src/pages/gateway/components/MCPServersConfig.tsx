@@ -97,6 +97,11 @@ export function MCPServersConfig({
 
     if (field === 'key') {
       if (key !== value) {
+        // Check if the new key already exists
+        if (env[value] !== undefined) {
+          console.warn(`Environment variable "${value}" already exists. Skipping rename.`);
+          return;
+        }
         env[value] = env[key];
         delete env[key];
       }
@@ -164,6 +169,94 @@ export function MCPServersConfig({
     updatedServers[serverIndex] = {
       ...server,
       env
+    };
+
+    updateConfig({ mcpServers: updatedServers });
+  };
+
+  const updateHeader = (serverIndex: number, headerIndex: number, field: 'key' | 'value', value: string) => {
+    const updatedServers = [...mcpServers];
+    const server = updatedServers[serverIndex];
+    const headers = { ...server.headers };
+    const headerKeys = Object.keys(headers);
+    const key = headerKeys[headerIndex];
+
+    if (field === 'key') {
+      if (key !== value) {
+        // Check if the new key already exists
+        if (headers[value] !== undefined) {
+          console.warn(`Header key "${value}" already exists. Skipping rename.`);
+          return;
+        }
+        headers[value] = headers[key];
+        delete headers[key];
+      }
+    } else {
+      headers[key] = value;
+    }
+
+    updatedServers[serverIndex] = {
+      ...server,
+      headers
+    };
+
+    updateConfig({ mcpServers: updatedServers });
+  };
+
+  const addHeader = (serverIndex: number) => {
+    const updatedServers = [...mcpServers];
+    const server = updatedServers[serverIndex];
+    const headers = { ...server.headers };
+
+    const commonHeaders = [
+      "Authorization",
+      "X-API-Key",
+      "X-Auth-Token",
+      "Content-Type",
+      "Accept"
+    ];
+
+    const existingKeys = Object.keys(headers);
+    
+    let newKey = "";
+
+    // Try to find an unused common header
+    for (const header of commonHeaders) {
+      if (!existingKeys.includes(header)) {
+        newKey = header;
+        break;
+      }
+    }
+
+    // If all common headers are used, create a custom header
+    if (!newKey) {
+      let count = 1;
+      while (existingKeys.includes(`X-Custom-Header-${count}`)) {
+        count++;
+      }
+      newKey = `X-Custom-Header-${count}`;
+    }
+
+    headers[newKey] = "";
+
+    updatedServers[serverIndex] = {
+      ...server,
+      headers
+    };
+
+    updateConfig({ mcpServers: updatedServers });
+  };
+
+  const removeHeader = (serverIndex: number, headerIndex: number) => {
+    const updatedServers = [...mcpServers];
+    const server = updatedServers[serverIndex];
+    const headers = { ...server.headers };
+    const key = Object.keys(headers)[headerIndex];
+    delete headers[key];
+
+    updatedServers[serverIndex] = {
+      ...server,
+      headers
     };
 
     updateConfig({ mcpServers: updatedServers });
@@ -312,6 +405,46 @@ export function MCPServersConfig({
                     value={server.url || ''}
                     onChange={(e) => updateServer(index, 'url', e.target.value)}
                   />
+
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">{t('gateway.headers')}</h4>
+                    <div className="flex flex-col gap-2">
+                      {Object.entries(server.headers || {}).map(([key, value], headerIndex) => (
+                        <div key={headerIndex} className="flex items-center gap-2">
+                          <Input
+                            className="flex-1"
+                            value={key}
+                            onChange={(e) => updateHeader(index, headerIndex, 'key', e.target.value)}
+                            placeholder={t('gateway.header_key_placeholder')}
+                          />
+                          <Input
+                            className="flex-1"
+                            value={String(value)}
+                            onChange={(e) => updateHeader(index, headerIndex, 'value', e.target.value)}
+                            placeholder={t('gateway.header_value_placeholder')}
+                          />
+                          <Button
+                            color="danger"
+                            variant="flat"
+                            isIconOnly
+                            onPress={() => removeHeader(index, headerIndex)}
+                          >
+                            <LocalIcon icon="lucide:x" />
+                          </Button>
+                        </div>
+                      ))}
+
+                      <Button
+                        color="primary"
+                        variant="flat"
+                        size="sm"
+                        startContent={<LocalIcon icon="lucide:plus" />}
+                        onPress={() => addHeader(index)}
+                      >
+                        {t('gateway.add_header')}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
 

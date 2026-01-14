@@ -74,7 +74,11 @@ mcpServers:
     url: "http://localhost:5237/sse"
     policy: "onDemand"
 
-  - type: "streamable-http"  # unimplemented for now
+  - type: "streamable-http"  # now supports headers configuration
     name: "mock-user-mcp"
     url: "http://localhost:5237/mcp"
+    headers:
+      # Example headers for authentication
+      # Authorization: "Bearer YOUR_TOKEN"
+      # X-API-Key: "your-api-key"
     policy: "onDemand"
