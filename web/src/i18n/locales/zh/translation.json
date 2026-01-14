@@ -336,7 +336,7 @@
     "env_key_placeholder": "请输入环境变量名称",
     "env_value_placeholder": "请输入环境变量值",
     "header_key_placeholder": "请输入请求头名称",
-    "header_value_placeholder": "请输入头部值",
+    "header_value_placeholder": "请输入请求头值",
     "headers": "请求头",
     "select_file": "选择文件",
     "prefix_placeholder": "输入前缀（可选）",

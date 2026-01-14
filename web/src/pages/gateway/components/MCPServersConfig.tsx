@@ -208,8 +208,6 @@ export function MCPServersConfig({
     const server = updatedServers[serverIndex];
     const headers = { ...server.headers };
 
-    let newKey = "Authorization";
-
     const commonHeaders = [
       "Authorization",
       "X-API-Key",
@@ -219,7 +217,10 @@ export function MCPServersConfig({
     ];
 
     const existingKeys = Object.keys(headers);
+    
+    let newKey = "";
 
+    // Try to find an unused common header
     for (const header of commonHeaders) {
       if (!existingKeys.includes(header)) {
         newKey = header;
@@ -227,7 +228,8 @@ export function MCPServersConfig({
       }
     }
 
-    if (existingKeys.includes(newKey)) {
+    // If all common headers are used, create a custom header
+    if (!newKey) {
       let count = 1;
       while (existingKeys.includes(`X-Custom-Header-${count}`)) {
         count++;
