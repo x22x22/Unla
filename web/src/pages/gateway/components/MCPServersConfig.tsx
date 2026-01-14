@@ -97,6 +97,11 @@ export function MCPServersConfig({
 
     if (field === 'key') {
       if (key !== value) {
+        // Check if the new key already exists
+        if (env[value] !== undefined) {
+          console.warn(`Environment variable "${value}" already exists. Skipping rename.`);
+          return;
+        }
         env[value] = env[key];
         delete env[key];
       }
