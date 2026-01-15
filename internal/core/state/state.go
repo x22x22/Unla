@@ -60,11 +60,11 @@ func NewState() *State {
 }
 
 func headersEqual(a, b map[string]string) bool {
+	if len(a) == 0 && len(b) == 0 {
+		return true
+	}
 	return reflect.DeepEqual(a, b)
 }
-
-// BuildStateFromConfig creates a new State from the given configuration
-func BuildStateFromConfig(ctx context.Context, cfgs []*config.MCPConfig, oldState *State, logger *zap.Logger) (*State, error) {
 
 // BuildStateFromConfig creates a new State from the given configuration
 func BuildStateFromConfig(ctx context.Context, cfgs []*config.MCPConfig, oldState *State, logger *zap.Logger) (*State, error) {

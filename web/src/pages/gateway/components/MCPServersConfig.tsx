@@ -197,34 +197,6 @@ export function MCPServersConfig({
     updateConfig({ mcpServers: updatedServers });
   };
 
-  const updateHeader = (serverIndex: number, headerIndex: number, field: 'key' | 'value', value: string) => {
-    const updatedServers = [...mcpServers];
-    const server = updatedServers[serverIndex];
-    const headers = { ...(server.headers || {}) };
-    const headerKeys = getEditableHeaderKeys(headers);
-    const key = headerKeys[headerIndex];
-
-    if (!key) {
-      return;
-    }
-
-    if (field === 'key') {
-      if (key !== value) {
-        headers[value] = headers[key];
-        delete headers[key];
-      }
-    } else {
-      headers[key] = value;
-    }
-
-    updatedServers[serverIndex] = {
-      ...server,
-      headers
-    };
-
-    updateConfig({ mcpServers: updatedServers });
-  };
-
   const addHeader = (serverIndex: number) => {
     const updatedServers = [...mcpServers];
     const server = updatedServers[serverIndex];
