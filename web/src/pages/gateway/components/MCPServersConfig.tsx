@@ -169,6 +169,46 @@ export function MCPServersConfig({
     }
 
     if (field === 'key') {
+      const newKey = value;
+
+      // Disallow empty header keys
+      if (!newKey) {
+        return;
+      }
+
+      // Disallow overwriting an existing header with a different key
+      if (newKey !== key && Object.prototype.hasOwnProperty.call(headers, newKey)) {
+        return;
+      }
+
+      if (key !== newKey) {
+        headers[newKey] = headers[key];
+        delete headers[key];
+      }
+    } else {
+      headers[key] = value;
+    }
+
+    updatedServers[serverIndex] = {
+      ...server,
+      headers
+    };
+
+    updateConfig({ mcpServers: updatedServers });
+  };
+
+  const updateHeader = (serverIndex: number, headerIndex: number, field: 'key' | 'value', value: string) => {
+    const updatedServers = [...mcpServers];
+    const server = updatedServers[serverIndex];
+    const headers = { ...(server.headers || {}) };
+    const headerKeys = getEditableHeaderKeys(headers);
+    const key = headerKeys[headerIndex];
+
+    if (!key) {
+      return;
+    }
+
+    if (field === 'key') {
       if (key !== value) {
         headers[value] = headers[key];
         delete headers[key];
